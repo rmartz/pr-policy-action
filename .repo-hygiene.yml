@@ -1,0 +1,35 @@
+# @rmartz/repo-hygiene check configuration for this repo, run through the
+# composite-Action caller (.github/workflows/repo-hygiene.yml).
+#
+# Every enabled check carries an explicit `severity: error` so each genuinely
+# gates (repository checklist § Repo hygiene); file-caps expresses its error tier
+# per glob instead, because a blanket severity would promote its advisory warn
+# tier. docs/ is an OKF bundle with a nested index (docs/design/) — see
+# docs/okf-format.md.
+checks:
+  conflict-markers:
+    severity: error
+  action-pins:
+    severity: error
+  package-pins:
+    severity: error
+  docs-links:
+    severity: error
+    roots: [docs]
+    anchors: true
+  # This repo's pages are concept/guide/design pages with no first-party source
+  # tree to bind to, so every type is resource-exempt.
+  okf:
+    severity: error
+    types: [Reference, Guidance, Design]
+    resourceExemptTypes: [Reference, Guidance, Design]
+  okf-index:
+    severity: error
+  md-pairing:
+    severity: error
+    wrapper: true
+  file-caps:
+    overrides:
+      - glob: 'docs/**/*.md'
+        lines: { warn: 400, error: 600 }
+        bytes: { warn: 24KB, error: 40KB }
