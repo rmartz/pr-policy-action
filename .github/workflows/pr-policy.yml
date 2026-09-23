@@ -1,0 +1,33 @@
+name: pr-policy
+
+# Dogfoods this Action on its own PRs, through the exact caller shape consumers
+# use (docs/consuming.md) except `uses: ./`. On pull_request_target the checkout is
+# the BASE ref, so the action code that runs is main's — never the PR's — and the
+# CLI only reads the PR through the API. That is what makes the write token safe.
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled]
+
+permissions:
+  checks: write # post the pr-policy check-run
+  pull-requests: write # write the labels pr-policy owns (CI approval needed)
+  contents: read # read changed files at the merge base and head
+  packages: read # install the CLI from GitHub Packages
+
+concurrency:
+  # Latest-wins per PR: a label action fires a burst of events, and the newest
+  # label state should be the one that posts.
+  group: pr-policy-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  pr-policy:
+    name: pr-policy (evaluate)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./
+        with:
+          pr: ${{ github.event.pull_request.number }}

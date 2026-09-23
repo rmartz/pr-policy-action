@@ -1,0 +1,39 @@
+{
+  "name": "@rmartz/pr-policy-action",
+  "version": "0.0.0-development",
+  "private": true,
+  "description": "Composite GitHub Action that runs the @rmartz/pr-policy read-only PR content checks and posts the single blocking pr-policy check-run, kept current by Dependabot + bot-automerge.",
+  "keywords": [
+    "pr-policy",
+    "github-actions",
+    "composite-action",
+    "check-run",
+    "merge-gate"
+  ],
+  "homepage": "https://github.com/rmartz/pr-policy-action#readme",
+  "bugs": {
+    "url": "https://github.com/rmartz/pr-policy-action/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rmartz/pr-policy-action.git"
+  },
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "@rmartz/pr-policy": "0.1.0"
+  },
+  "devDependencies": {
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/github": "^12.0.9",
+    "@semantic-release/release-notes-generator": "^14.1.1",
+    "conventional-changelog-conventionalcommits": "^9.1.0",
+    "prettier": "^3.9.8",
+    "semantic-release": "^25.0.9"
+  }
+}

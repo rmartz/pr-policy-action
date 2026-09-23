@@ -1,0 +1,65 @@
+name: 'pr-policy'
+description: 'Run the @rmartz/pr-policy read-only PR content checks and post the single blocking pr-policy check-run.'
+author: 'rmartz'
+
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+# A composite action that wraps the @rmartz/pr-policy CLI. The consuming repo's
+# caller job runs on pull_request_target and grants checks:write +
+# pull-requests:write + contents:read (+ packages:read for the install). The CLI
+# reads the PR's title, labels, and changed files — including both sides of every
+# changed workflow file — through the API, then posts the `pr-policy` check-run and
+# writes the labels it owns (`CI approval needed`). It never checks out or executes
+# PR code, which is what makes the elevated pull_request_target token safe here.
+#
+# The CLI version is the one pinned in this action's package-lock.json (bumped by
+# Dependabot + released as a new action version), so a given action ref enforces a
+# reproducible policy. See docs/design/integration-contract.md.
+
+inputs:
+  pr:
+    description: >-
+      PR number to evaluate. Pass the pull_request_target event's number from your
+      caller (github.event.pull_request.number) — see docs/consuming.md. This text
+      must not contain a template expression: an action manifest validates
+      expressions in input metadata against a context where github is unavailable.
+    required: true
+  token:
+    description: >-
+      Token used to install @rmartz/pr-policy from GitHub Packages, read the PR, post
+      the check-run, and write labels. Defaults to the workflow GITHUB_TOKEN, which
+      needs checks:write + pull-requests:write + contents:read + packages:read.
+    required: false
+    default: ${{ github.token }}
+  node-version:
+    description: 'Node.js version to run the CLI under.'
+    required: false
+    default: '22'
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      with:
+        node-version: ${{ inputs.node-version }}
+        registry-url: https://npm.pkg.github.com
+        scope: '@rmartz'
+    # Install the pinned CLI into this action's own directory — $GITHUB_ACTION_PATH
+    # holds this action's package.json + lockfile — not the consumer workspace.
+    - name: Install pinned @rmartz/pr-policy
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      env:
+        NODE_AUTH_TOKEN: ${{ inputs.token }}
+      run: npm ci
+    - name: Evaluate PR policy
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        PR_NUMBER: ${{ inputs.pr }}
+        REPO: ${{ github.repository }}
+      run: >-
+        "${GITHUB_ACTION_PATH}/node_modules/.bin/ai-pr-policy" evaluate
+        --pr "${PR_NUMBER}" --repo "${REPO}"
