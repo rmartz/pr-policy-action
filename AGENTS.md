@@ -54,13 +54,13 @@ and self-manages its config: fix gaps here, in a PR.
   [commit-convention](.github/workflows/commit-convention.yml) tripwire.
 - **Merge flow:** merge-safety, bot-automerge (safe only while merge-safety and
   CI are required checks), and the `pr-policy` dogfood.
-- **Dependabot** needs the `DEPENDABOT_PACKAGES_TOKEN` Dependabot secret to see
-  new CLI versions (see [.github/dependabot.yml](.github/dependabot.yml)).
+- **Dependabot** reads `@rmartz/pr-policy` from npmjs with no registry auth (see
+  [.github/dependabot.yml](.github/dependabot.yml)).
 
 ## Common commands
 
 ```bash
-npm ci                 # install deps (needs GitHub Packages auth for @rmartz/*)
+npm ci                 # install deps (all from npmjs, no auth needed)
 npm run format:check   # prettier --check .
 npm run format         # prettier --write .
 ```
