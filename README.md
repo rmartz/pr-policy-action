@@ -17,6 +17,7 @@ permissions:
   pull-requests: write
   contents: read
   packages: read
+  statuses: write # one commit status per policy check
 jobs:
   pr-policy:
     name: pr-policy (evaluate)
@@ -28,7 +29,10 @@ jobs:
           pr: ${{ github.event.pull_request.number }}
 ```
 
-Then require the `pr-policy` status on your default branch. The full setup, and
+Then require the `pr-policy` status on your default branch. Each policy check
+also gets its own informational status (`pr-policy / title`,
+`pr-policy / ci-change`, …) that shows failed, pending, or passed, so a reader
+sees which check is holding the PR without opening the check-run. The full setup, and
 why this runs on `pull_request_target`, is in the
 [consumer guide](docs/consuming.md).
 
