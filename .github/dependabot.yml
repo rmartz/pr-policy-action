@@ -32,7 +32,9 @@ updates:
     registries:
       - github-packages
     schedule:
-      interval: weekly
+      # Daily, so a new @rmartz/pr-policy release reaches the Action (and its
+      # consumers) within a day instead of up to a week.
+      interval: daily
     commit-message:
       # Production deps ship inside the released Action, so their bump must cut a
       # release: `fix` (→ patch). dependabot-release-type then rewrites the title to
