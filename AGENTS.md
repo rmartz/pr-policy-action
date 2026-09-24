@@ -34,7 +34,9 @@ and `docs-links` checks. See [docs/okf-format.md](docs/okf-format.md).
 
 - The CLI posts the check-run named **`pr-policy`**. Consumers require it by
   literal name, so no job or step here may post a status with that name. The
-  dogfood job is named `pr-policy (evaluate)` for that reason.
+  dogfood job is named `pr-policy (evaluate)` for that reason. The per-check
+  statuses the runner posts are `<status-context> / <check>`, never the bare
+  name.
 - `action.yml` input metadata must not contain `${{ }}` expressions in
   descriptions; the manifest is validated without the `github` context.
 - The Action never checks out or runs PR code. That's what makes the

@@ -22,6 +22,7 @@ permissions:
   pull-requests: write # write the labels pr-policy owns (CI approval needed)
   contents: read # read changed files at the merge base and head
   packages: read # install the CLI from GitHub Packages
+  statuses: write # post one commit status per policy check
 
 concurrency:
   group: pr-policy-${{ github.event.pull_request.number }}
@@ -43,6 +44,21 @@ No checkout step is needed: the CLI reads everything through the API.
 Name the job something other than `pr-policy`. The CLI posts its own check-run
 named exactly `pr-policy`; a job with the same name would add a second,
 always-green status under the name your ruleset requires.
+
+### Per-check statuses
+
+Besides the `pr-policy` check-run, the Action posts one commit status per policy
+check, named `<status-context> / <check>` (`pr-policy / title`,
+`pr-policy / ci-change`, …). Each is `failure` when that check found something
+the author can fix, `pending` while it waits on a human sign-off, and `success`
+otherwise, with the deciding finding as its description. So a reader sees which
+check is red or waiting straight from the PR's status list.
+
+- **Don't require them.** They're informational. `pr-policy` is the one required
+  gate, and the set of checks grows with each CLI release; a required per-check
+  status would need a ruleset edit every time.
+- **Without `statuses: write`** the Action logs one warning and carries on; the
+  check-run still carries the verdict. Set `statuses: false` to opt out.
 
 ### Why these event types
 

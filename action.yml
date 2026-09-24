@@ -8,10 +8,12 @@ branding:
 
 # A composite action that wraps the @rmartz/pr-policy CLI. The consuming repo's
 # caller job runs on pull_request_target and grants checks:write +
-# pull-requests:write + contents:read (+ packages:read for the install). The CLI
+# pull-requests:write + contents:read (+ packages:read for the install, and
+# statuses:write for the per-check statuses). The CLI
 # reads the PR's title, labels, and changed files — including both sides of every
-# changed workflow file — through the API, then posts the `pr-policy` check-run and
-# writes the labels it owns (`CI approval needed`). It never checks out or executes
+# changed workflow file — through the API, then posts the `pr-policy` check-run,
+# writes the labels it owns (`CI approval needed`), and posts one informational
+# commit status per check (`pr-policy / <check>`). It never checks out or executes
 # PR code, which is what makes the elevated pull_request_target token safe here.
 #
 # The CLI version is the one pinned in this action's package-lock.json (bumped by
@@ -29,14 +31,30 @@ inputs:
   token:
     description: >-
       Token used to install @rmartz/pr-policy from GitHub Packages, read the PR, post
-      the check-run, and write labels. Defaults to the workflow GITHUB_TOKEN, which
-      needs checks:write + pull-requests:write + contents:read + packages:read.
+      the check-run and per-check statuses, and write labels. Defaults to the
+      workflow GITHUB_TOKEN, which needs checks:write + pull-requests:write +
+      contents:read + packages:read (+ statuses:write for per-check statuses).
     required: false
     default: ${{ github.token }}
   node-version:
     description: 'Node.js version to run the CLI under.'
     required: false
     default: '22'
+  statuses:
+    description: >-
+      Post one commit status per policy check (e.g. "pr-policy / title") so the
+      PR's status list shows which check failed, which is waiting on a human
+      sign-off, and which passed. Needs statuses:write on the calling job; without
+      it the action warns and the pr-policy check-run still carries the verdict.
+      Set to "false" to turn it off.
+    required: false
+    default: 'true'
+  status-context:
+    description: >-
+      Prefix for the per-check status names ("<prefix> / <check>"). Set a distinct
+      value when a workflow runs this action more than once.
+    required: false
+    default: 'pr-policy'
 
 runs:
   using: composite
@@ -54,12 +72,15 @@ runs:
       env:
         NODE_AUTH_TOKEN: ${{ inputs.token }}
       run: npm ci
+    # The runner script lives in this action's directory, so its import of
+    # @rmartz/pr-policy resolves to the copy just installed there. It does what
+    # `ai-pr-policy evaluate` does, then posts one commit status per check.
     - name: Evaluate PR policy
       shell: bash
       env:
         GH_TOKEN: ${{ inputs.token }}
-        PR_NUMBER: ${{ inputs.pr }}
-        REPO: ${{ github.repository }}
-      run: >-
-        "${GITHUB_ACTION_PATH}/node_modules/.bin/ai-pr-policy" evaluate
-        --pr "${PR_NUMBER}" --repo "${REPO}"
+        INPUT_PR: ${{ inputs.pr }}
+        INPUT_TOKEN: ${{ inputs.token }}
+        INPUT_STATUSES: ${{ inputs.statuses }}
+        INPUT_STATUS_CONTEXT: ${{ inputs.status-context }}
+      run: node "${GITHUB_ACTION_PATH}/scripts/evaluate.mjs"
