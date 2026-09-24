@@ -14,8 +14,10 @@ in this repo's lockfile, then runs `ai-pr-policy evaluate` against one PR. The C
    `.github/workflows/**` file through the API;
 2. runs every registered policy check (the list lives in
    [rmartz/pr-policy's docs](https://github.com/rmartz/pr-policy/blob/main/docs/checks/index.md));
-3. posts **one** `pr-policy` check-run on the PR head: `failure` on any blocking
-   finding, otherwise `success`;
+3. posts **one** `pr-policy` check-run on the PR head: `failure` on a finding the
+   author can fix, pending while it waits on a human sign-off, otherwise
+   `success` (see
+   [the check-run contract](https://github.com/rmartz/pr-policy/blob/main/docs/check-run-contract.md));
 4. writes the labels its checks own outright (today, `CI approval needed`).
 
 It never checks out or executes the PR's code, and never applies
