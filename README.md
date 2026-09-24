@@ -16,7 +16,6 @@ permissions:
   checks: write
   pull-requests: write
   contents: read
-  packages: read
   statuses: write # one commit status per policy check
 jobs:
   pr-policy:

@@ -30,10 +30,11 @@ inputs:
     required: true
   token:
     description: >-
-      Token used to install @rmartz/pr-policy from GitHub Packages, read the PR, post
-      the check-run and per-check statuses, and write labels. Defaults to the
-      workflow GITHUB_TOKEN, which needs checks:write + pull-requests:write +
-      contents:read + packages:read (+ statuses:write for per-check statuses).
+      Token used to read the PR, post the check-run and per-check statuses, and
+      write labels. Defaults to the workflow GITHUB_TOKEN, which needs
+      checks:write + pull-requests:write + contents:read (+ statuses:write for
+      per-check statuses). The CLI itself installs from npmjs with no auth, so
+      `packages: read` is no longer needed.
     required: false
     default: ${{ github.token }}
   node-version:
@@ -62,15 +63,13 @@ runs:
     - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
       with:
         node-version: ${{ inputs.node-version }}
-        registry-url: https://npm.pkg.github.com
-        scope: '@rmartz'
     # Install the pinned CLI into this action's own directory — $GITHUB_ACTION_PATH
-    # holds this action's package.json + lockfile — not the consumer workspace.
+    # holds this action's package.json, lockfile, and .npmrc (which pins the
+    # @rmartz scope to npmjs) — not the consumer workspace. The package is public
+    # on npmjs, so the install needs no token.
     - name: Install pinned @rmartz/pr-policy
       shell: bash
       working-directory: ${{ github.action_path }}
-      env:
-        NODE_AUTH_TOKEN: ${{ inputs.token }}
       run: npm ci
     # The runner script lives in this action's directory, so its import of
     # @rmartz/pr-policy resolves to the copy just installed there. It does what

@@ -1,15 +1,7 @@
 version: 2
 
-# @rmartz/pr-policy is an npm dependency published to GitHub Packages, so
-# Dependabot needs registry auth to see new CLI versions. This repo needs a
-# Dependabot secret DEPENDABOT_PACKAGES_TOKEN (a classic PAT with `read:packages`).
-# Without it the npm job 422s ("Secret Not Found") and silently stops opening ALL
-# npm PRs.
-registries:
-  github-packages:
-    type: npm-registry
-    url: https://npm.pkg.github.com
-    token: ${{secrets.DEPENDABOT_PACKAGES_TOKEN}}
+# @rmartz/pr-policy is public on npmjs, so Dependabot needs no registry block or
+# DEPENDABOT_PACKAGES_TOKEN secret to see new CLI versions.
 
 updates:
   - package-ecosystem: github-actions
@@ -29,8 +21,6 @@ updates:
 
   - package-ecosystem: npm
     directory: /
-    registries:
-      - github-packages
     schedule:
       # Daily, so a new @rmartz/pr-policy release reaches the Action (and its
       # consumers) within a day instead of up to a week.
