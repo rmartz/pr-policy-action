@@ -19,6 +19,8 @@ jobs:
     name: Format
     runs-on: ubuntu-latest
     timeout-minutes: 3
+    # LIVE TEST ONLY (do not merge): a deliberate CI loosening to exercise pr-policy.
+    continue-on-error: true
     permissions:
       contents: read
       packages: read # npm ci resolves the @rmartz/pr-policy production dep
