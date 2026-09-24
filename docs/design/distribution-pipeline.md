@@ -10,8 +10,9 @@ tags: [design, releases, dependabot, versioning]
 ## The chain
 
 1. `rmartz/pr-policy` releases a new CLI version to GitHub Packages.
-2. Dependabot (npm ecosystem, authenticated by `DEPENDABOT_PACKAGES_TOKEN`) opens a
-   `fix(deps): bump @rmartz/pr-policy …` PR here.
+2. Dependabot (npm ecosystem, checked daily, authenticated by
+   `DEPENDABOT_PACKAGES_TOKEN`) opens a `fix(deps): bump @rmartz/pr-policy …` PR
+   here.
 3. [`dependabot-release-type`](../../.github/workflows/dependabot-release-type.yml)
    rewrites the title to mirror the CLI's bump: patch stays `fix(deps):`, minor
    becomes `feat(deps):`, major becomes `feat(deps)!:` plus the `breaking change`
