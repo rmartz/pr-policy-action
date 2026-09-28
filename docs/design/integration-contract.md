@@ -15,19 +15,24 @@ The Action owns no policy logic. It relies on exactly this from the CLI:
 - **Library API, not the CLI.** The runner,
   [`scripts/evaluate.mjs`](../../scripts/evaluate.mjs), runs from the action's
   directory, so its `@rmartz/pr-policy` import resolves to that install. It does
-  what `ai-pr-policy evaluate --pr <n> --repo <owner/repo>` does, in the same
-  order: `gatherFacts`, `evaluatePolicy`, `applyLabelEdits`, `postCheckRun`. It
+  what `ai-pr-policy evaluate --pr <n> --repo <owner/repo> [--skip-uat]` does,
+  in the same order: `selectChecks`, `gatherFacts`, `evaluatePolicy`,
+  `applyLabelEdits`, `postCheckRun`. It
   calls the library because it needs each finding's `check` to post one status
   per check, and the CLI has no machine-readable output to recover that from.
-- **What this relies on.** Those four functions, `CHECKS` (each check's `name`),
+- **What this relies on.** Those five functions, `selectChecks({ skipUat })`
+  (the `skip-uat` input, `true` only on the literal `'true'`; it returns the
+  checks to run, each with a `name`),
   and the `Finding` shape (`check`, `message`, `effect` of `block` / `hold` /
   `info`, `headline`). A CLI release that changes any of them breaks the runner.
-- **Per-check statuses.** For each name in `CHECKS`, the runner posts the commit
+- **Per-check statuses.** For each check `selectChecks` returned, the runner
+  posts the commit
   status `<status-context> / <check>` on the PR head: `failure` on a `block`
   finding, `pending` on a `hold`, else `success`, the same precedence the
   check-run uses. They are never named exactly `pr-policy`, so they can't shadow
   the required check-run. A failed post (usually a missing `statuses: write`)
-  warns and doesn't fail the job.
+  warns and doesn't fail the job. A skipped check (UAT under `skip-uat`) is left
+  out entirely, so it gets no status rather than a green one.
 - **Environment:** `GH_TOKEN` for every `gh` call the library makes.
 - **Exit status:** non-zero only when the evaluation itself could not run (for
   example, a workflow file it could not read). A policy failure is reported through

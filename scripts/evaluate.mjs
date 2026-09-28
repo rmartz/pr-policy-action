@@ -12,11 +12,11 @@
 // library's `gh` calls. See docs/design/integration-contract.md.
 
 import {
-  CHECKS,
   applyLabelEdits,
   evaluatePolicy,
   gatherFacts,
   postCheckRun,
+  selectChecks,
 } from '@rmartz/pr-policy';
 
 const env = process.env;
@@ -34,14 +34,20 @@ try {
     process.exit(2);
   }
 
+  // The caller workflow sets these, never the PR: a pull_request_target caller
+  // runs from the base branch, so a PR can't switch off a gate it would wait on.
+  // Only the literal 'true' opts out; anything else keeps the strictest policy.
+  const checks = selectChecks({ skipUat: env.INPUT_SKIP_UAT === 'true' });
+
   const target = { repo, pr };
   const { facts, headSha } = await gatherFacts(target);
-  const evaluation = await evaluatePolicy(facts);
+  const evaluation = await evaluatePolicy(facts, checks);
   await applyLabelEdits(target, evaluation);
   await postCheckRun(target, headSha, evaluation);
   console.log(`${repo}#${pr}: ${evaluation.outcome} — ${evaluation.title}`);
 
-  const results = CHECKS.map(({ name }) => summarize(name, evaluation.findings));
+  // A skipped check is left out entirely, so it posts no status either.
+  const results = checks.map(({ name }) => summarize(name, evaluation.findings));
   for (const result of results) {
     console.log(`  ${result.check}: ${result.state} — ${result.description}`);
   }

@@ -62,6 +62,33 @@ check is red or waiting straight from the PR's status list.
 - **Without `statuses: write`** the Action logs one warning and carries on; the
   check-run still carries the verdict. Set `statuses: false` to opt out.
 
+### Repos without UAT: `skip-uat`
+
+The UAT gate holds a PR until it's user-tested or marked as not needing it. A
+repo with nothing to user-test, such as one that ships only a library or an
+Action, can turn the gate off in its caller:
+
+```yaml
+- uses: rmartz/pr-policy-action@<sha> # vX.Y.Z
+  with:
+    pr: ${{ github.event.pull_request.number }}
+    skip-uat: true
+```
+
+The title and CI-change checks are unchanged. The UAT check doesn't run at all,
+so no `pr-policy / uat` status is posted, and `pr-policy` can pass without a UAT
+label. The default, `false`, keeps the gate.
+
+- **It lives in the caller workflow on purpose.** A `pull_request_target` caller
+  runs from the default branch, so a PR can't switch off a gate it would
+  otherwise wait on. A setting in a file the PR could edit would let it do
+  exactly that.
+- **Keep the name and value literal.** Agents decide whether a repo uses UAT by
+  reading its caller workflow on the default branch for a
+  `rmartz/pr-policy-action` step with `skip-uat: true`. Pass it as a plain
+  `true`, not through an expression or a variable, so both the gate and the
+  agents read the same setting.
+
 ### Why these event types
 
 - `synchronize` keeps the verdict on the current head.
