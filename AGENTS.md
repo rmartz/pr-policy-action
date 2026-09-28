@@ -49,9 +49,17 @@ This repo follows the shared
 and self-manages its config: fix gaps here, in a PR.
 
 - **Hygiene** via `rmartz/repo-hygiene-action`, every check at `severity: error`.
-- **CI:** Format and a semantic-release dry-run ([ci.yml](.github/workflows/ci.yml)),
-  PR-title lint, and the post-merge
-  [commit-convention](.github/workflows/commit-convention.yml) tripwire.
+- **CI:** Format ([ci.yml](.github/workflows/ci.yml)), PR-title lint, and the
+  post-merge [commit-convention](.github/workflows/commit-convention.yml) tripwire.
+- **Releases** run through the fleet's shared
+  [semantic-release-ci](https://github.com/rmartz/semantic-release-ci) workflows:
+  [release.yml](.github/workflows/release.yml) releases on push to `main`, and
+  [release-check.yml](.github/workflows/release-check.yml) (required check
+  `release-check / release-check`) proves `.releaserc.json` still works with the
+  shared toolchain on every PR. The toolchain (`semantic-release`, its plugins, the
+  changelog preset) is **not** in this repo's `package.json` — never add it back,
+  and never reintroduce a `semantic-release --dry-run` job as a release guard: on a
+  PR it exits before rendering notes, so it passes without testing anything.
 - **Merge flow:** merge-safety, bot-automerge (safe only while merge-safety and
   CI are required checks), and the `pr-policy` dogfood.
 - **Dependabot** reads `@rmartz/pr-policy` from npmjs with no registry auth (see

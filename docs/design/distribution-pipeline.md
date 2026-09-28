@@ -18,9 +18,15 @@ tags: [design, releases, dependabot, versioning]
    label.
 4. bot-automerge auto-merges patch and minor bumps once the required checks pass.
    A major waits for a human.
-5. [`release.yml`](../../.github/workflows/release.yml) runs semantic-release,
+5. [`release.yml`](../../.github/workflows/release.yml) runs semantic-release
+   through the fleet's shared
+   [semantic-release-ci](https://github.com/rmartz/semantic-release-ci) workflow,
    which tags the Action and creates the GitHub Release. It publishes nothing and
-   commits nothing back.
+   commits nothing back. The required `release-check / release-check` check
+   ([`release-check.yml`](../../.github/workflows/release-check.yml)) proves the
+   release config renders with the shared toolchain on every PR, so a broken
+   release config fails the PR rather than stalling this chain after an
+   auto-merge.
 6. Each consumer's Dependabot `github-actions` entry bumps its SHA pin.
 
 ## Versioning
