@@ -11,7 +11,9 @@ tags: [design, releases, dependabot, versioning]
 
 1. `rmartz/pr-policy` releases a new CLI version to npmjs.
 2. Dependabot (npm ecosystem, checked daily, no registry auth needed) opens a
-   `fix(deps): bump @rmartz/pr-policy …` PR here.
+   `fix(deps): bump @rmartz/pr-policy …` PR here on its next daily run. The CLI
+   is exempt from Dependabot's default 3-day release cooldown, since it's
+   first-party; other dependencies keep that cooldown.
 3. [`dependabot-release-type`](../../.github/workflows/dependabot-release-type.yml)
    rewrites the title to mirror the CLI's bump: patch stays `fix(deps):`, minor
    becomes `feat(deps):`, major becomes `feat(deps)!:` plus the `breaking change`
