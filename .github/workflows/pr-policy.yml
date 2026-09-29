@@ -31,3 +31,5 @@ jobs:
       - uses: ./
         with:
           pr: ${{ github.event.pull_request.number }}
+          # This repo ships only an Action; there is nothing to user-test.
+          skip-uat: true
