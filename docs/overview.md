@@ -13,7 +13,8 @@ in this repo's lockfile, then evaluates one PR through its library API (what
 
 1. reads the PR's title, labels, changed files, and both sides of every changed
    `.github/workflows/**` file through the API;
-2. runs every registered policy check (the list lives in
+2. runs every registered policy check, minus the UAT gate when `skip-uat` is
+   set (the list lives in
    [rmartz/pr-policy's docs](https://github.com/rmartz/pr-policy/blob/main/docs/checks/index.md));
 3. posts **one** `pr-policy` check-run on the PR head: `failure` on a finding the
    author can fix, pending while it waits on a human sign-off, otherwise
@@ -37,6 +38,7 @@ It never checks out or executes the PR's code, and never applies
 | `node-version`   | `'22'`                | Node.js version the CLI runs under.                                              |
 | `statuses`       | `'true'`              | Post one commit status per check. `'false'` turns it off.                        |
 | `status-context` | `'pr-policy'`         | Status name prefix: `<prefix> / <check>`.                                        |
+| `skip-uat`       | `'false'`             | `'true'` drops the UAT gate, for a repo with nothing to user-test.               |
 
 There is no `version` input. The CLI version is the one pinned in this Action's
 lockfile, so an Action ref is a reproducible policy.

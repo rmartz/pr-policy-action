@@ -56,6 +56,16 @@ inputs:
       value when a workflow runs this action more than once.
     required: false
     default: 'pr-policy'
+  skip-uat:
+    description: >-
+      Don't run the UAT gate, for a repo with no user-acceptance testing (for
+      example one that ships only a library or an Action). The title and
+      CI-change checks are unchanged, and no "pr-policy / uat" status is posted.
+      Set this in the caller workflow on the default branch; a
+      pull_request_target caller runs from there, so a PR can't turn off a gate
+      it would otherwise wait on.
+    required: false
+    default: 'false'
 
 runs:
   using: composite
@@ -82,4 +92,5 @@ runs:
         INPUT_TOKEN: ${{ inputs.token }}
         INPUT_STATUSES: ${{ inputs.statuses }}
         INPUT_STATUS_CONTEXT: ${{ inputs.status-context }}
+        INPUT_SKIP_UAT: ${{ inputs.skip-uat }}
       run: node "${GITHUB_ACTION_PATH}/scripts/evaluate.mjs"
