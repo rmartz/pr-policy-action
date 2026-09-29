@@ -19,7 +19,10 @@ tags: [design, releases, dependabot, versioning]
    becomes `feat(deps):`, major becomes `feat(deps)!:` plus the `breaking change`
    label.
 4. bot-automerge auto-merges patch and minor bumps once the required checks pass.
-   A major waits for a human.
+   A major waits for a human. It enables auto-merge with the
+   `BOT_AUTOMERGE_TOKEN` real-actor PAT (an Actions **and** a Dependabot secret):
+   a merge enabled with `GITHUB_TOKEN` fires no `push` workflows, so step 5 would
+   never run.
 5. [`release.yml`](../../.github/workflows/release.yml) runs semantic-release
    through the fleet's shared
    [semantic-release-ci](https://github.com/rmartz/semantic-release-ci) workflow,
