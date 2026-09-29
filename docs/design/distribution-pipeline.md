@@ -11,16 +11,27 @@ tags: [design, releases, dependabot, versioning]
 
 1. `rmartz/pr-policy` releases a new CLI version to npmjs.
 2. Dependabot (npm ecosystem, checked daily, no registry auth needed) opens a
-   `fix(deps): bump @rmartz/pr-policy …` PR here.
+   `fix(deps): bump @rmartz/pr-policy …` PR here on its next daily run. The CLI
+   is exempt from Dependabot's default 3-day release cooldown, since it's
+   first-party; other dependencies keep that cooldown.
 3. [`dependabot-release-type`](../../.github/workflows/dependabot-release-type.yml)
    rewrites the title to mirror the CLI's bump: patch stays `fix(deps):`, minor
    becomes `feat(deps):`, major becomes `feat(deps)!:` plus the `breaking change`
    label.
 4. bot-automerge auto-merges patch and minor bumps once the required checks pass.
-   A major waits for a human.
-5. [`release.yml`](../../.github/workflows/release.yml) runs semantic-release,
+   A major waits for a human. It enables auto-merge with the
+   `BOT_AUTOMERGE_TOKEN` real-actor PAT (an Actions **and** a Dependabot secret):
+   a merge enabled with `GITHUB_TOKEN` fires no `push` workflows, so step 5 would
+   never run.
+5. [`release.yml`](../../.github/workflows/release.yml) runs semantic-release
+   through the fleet's shared
+   [semantic-release-ci](https://github.com/rmartz/semantic-release-ci) workflow,
    which tags the Action and creates the GitHub Release. It publishes nothing and
-   commits nothing back.
+   commits nothing back. The required `release-check / release-check` check
+   ([`release-check.yml`](../../.github/workflows/release-check.yml)) proves the
+   release config renders with the shared toolchain on every PR, so a broken
+   release config fails the PR rather than stalling this chain after an
+   auto-merge.
 6. Each consumer's Dependabot `github-actions` entry bumps its SHA pin.
 
 ## Versioning
