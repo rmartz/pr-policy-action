@@ -2,9 +2,10 @@
 
 A composite GitHub Action that runs the
 [`@rmartz/pr-policy`](https://github.com/rmartz/pr-policy) checks on a pull request
-and posts the single blocking **`pr-policy`** check-run. Each check is a read-only
-classifier of the PR's own content: today, CI-change classification (a workflow
-loosening needs a human's `CI change approved`); title-type rules come next.
+and posts the single blocking **`pr-policy`** verdict, as a check-run and a
+matching commit status. Each check is a read-only classifier of the PR's own
+content; the list lives in
+[rmartz/pr-policy's docs](https://github.com/rmartz/pr-policy/blob/main/docs/checks/index.md).
 
 ```yaml
 # .github/workflows/pr-policy.yml
@@ -16,7 +17,7 @@ permissions:
   checks: write
   pull-requests: write
   contents: read
-  statuses: write # one commit status per policy check
+  statuses: write # the pr-policy commit status, plus one per policy check
 jobs:
   pr-policy:
     name: pr-policy (evaluate)

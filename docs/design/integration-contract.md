@@ -17,8 +17,11 @@ The Action owns no policy logic. It relies on exactly this from the CLI:
   directory, so its `@rmartz/pr-policy` import resolves to that install. It does
   what `ai-pr-policy evaluate --pr <n> --repo <owner/repo> [--skip-uat]` does,
   in the same order: `selectChecks`, `gatherFacts`, `evaluatePolicy`,
-  `applyLabelEdits`, `postCheckRun`. It
-  calls the library because it needs each finding's `check` to post one status
+  `applyLabelEdits`, `postVerdict`. `postVerdict` posts the `pr-policy`
+  check-run and then a `pr-policy` commit status with the same state, so the
+  verdict survives GitHub superseding the check-run's suite
+  (rmartz/pr-policy#24). It is posted whatever `statuses` says, and a failed
+  status write only warns. The runner calls the library because it needs each finding's `check` to post one status
   per check, and the CLI has no machine-readable output to recover that from.
 - **What this relies on.** Those five functions, `selectChecks({ skipUat })`
   (the `skip-uat` input, `true` only on the literal `'true'`; it returns the
@@ -30,7 +33,7 @@ The Action owns no policy logic. It relies on exactly this from the CLI:
   status `<status-context> / <check>` on the PR head: `failure` on a `block`
   finding, `pending` on a `hold`, else `success`, the same precedence the
   check-run uses. They are never named exactly `pr-policy`, so they can't shadow
-  the required check-run. A failed post (usually a missing `statuses: write`)
+  the required verdict. A failed post (usually a missing `statuses: write`)
   warns and doesn't fail the job. A skipped check (UAT under `skip-uat`) is left
   out entirely, so it gets no status rather than a green one.
 - **Environment:** `GH_TOKEN` for every `gh` call the library makes.

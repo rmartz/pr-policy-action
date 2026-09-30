@@ -3,10 +3,15 @@
 // waiting on a human, and which passed, without opening the check-run.
 //
 // It does what `ai-pr-policy evaluate --pr <n> --repo <owner/repo>` does (gather
-// facts, apply label edits, post the one `pr-policy` check-run) through the
-// package's library API, because it needs each finding's `check` to group them.
-// The per-check statuses are informational: the `pr-policy` check-run stays the
-// one required gate, and a status is never named exactly `pr-policy`.
+// facts, apply label edits, post the `pr-policy` verdict) through the package's
+// library API, because it needs each finding's `check` to group them.
+//
+// The verdict is the `pr-policy` check-run plus a `pr-policy` commit status with
+// the same state. The status is the gate fix, not an informational extra: a
+// GITHUB_TOKEN check-run lands in an existing check suite, and once a newer run
+// supersedes that suite the merge gate ignores it while it still reads green
+// (rmartz/pr-policy#24). So it is posted whatever the `statuses` input says.
+// The per-check statuses (`<context> / <check>`) are the informational ones.
 //
 // Inputs arrive as INPUT_* env vars set by action.yml; GH_TOKEN is read by the
 // library's `gh` calls. See docs/design/integration-contract.md.
@@ -15,7 +20,7 @@ import {
   applyLabelEdits,
   evaluatePolicy,
   gatherFacts,
-  postCheckRun,
+  postVerdict,
   selectChecks,
 } from '@rmartz/pr-policy';
 
@@ -43,7 +48,7 @@ try {
   const { facts, headSha } = await gatherFacts(target);
   const evaluation = await evaluatePolicy(facts, checks);
   await applyLabelEdits(target, evaluation);
-  await postCheckRun(target, headSha, evaluation);
+  await postVerdict(target, headSha, evaluation);
   console.log(`${repo}#${pr}: ${evaluation.outcome} — ${evaluation.title}`);
 
   // A skipped check is left out entirely, so it posts no status either.
@@ -115,7 +120,8 @@ async function postStatuses(repo, sha, results) {
     }
     if (failure) {
       // Most often a job without `statuses: write`. Warn once and stop; the
-      // `pr-policy` check-run already carries the verdict.
+      // `pr-policy` verdict is already posted (postVerdict warns on its own
+      // status if the permission is missing).
       console.log(
         `::warning title=pr-policy::Could not post per-check statuses (${failure}). ` +
           'Grant the job `statuses: write`, or set `statuses: false` to silence this.',

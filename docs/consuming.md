@@ -21,7 +21,7 @@ permissions:
   checks: write # post the pr-policy check-run
   pull-requests: write # write the labels pr-policy owns (CI approval needed)
   contents: read # read changed files at the merge base and head
-  statuses: write # post one commit status per policy check
+  statuses: write # post the pr-policy commit status (the gate fix) and one per policy check
 
 concurrency:
   group: pr-policy-${{ github.event.pull_request.number }}
@@ -44,12 +44,26 @@ with no auth. (Action versions from before the move installed from GitHub Packag
 and needed it.)
 
 Name the job something other than `pr-policy`. The CLI posts its own check-run
-named exactly `pr-policy`; a job with the same name would add a second,
-always-green status under the name your ruleset requires.
+and commit status named exactly `pr-policy`; a job with the same name would add
+another, always-green entry under the name your ruleset requires.
+
+### The `pr-policy` verdict: a check-run and a commit status
+
+The verdict is posted twice with the same state: as the `pr-policy` check-run
+and as a `pr-policy` commit status. A check-run posted with `GITHUB_TOKEN` is
+filed into an existing check suite on the head commit. When a newer run of that
+suite's workflow lands on the same commit, GitHub treats the suite as superseded
+and the merge gate ignores the check-run, while the PR still shows it green
+(rmartz/pr-policy#24). A commit status belongs to no suite, so it can't be
+superseded.
+
+**Grant `statuses: write`.** Without it the Action warns and posts only the
+check-run, and the PR stays exposed to that "all green and blocked" state. The
+`statuses` input doesn't turn this status off.
 
 ### Per-check statuses
 
-Besides the `pr-policy` check-run, the Action posts one commit status per policy
+Besides the `pr-policy` verdict, the Action posts one commit status per policy
 check, named `<status-context> / <check>` (`pr-policy / title`,
 `pr-policy / ci-change`, …). Each is `failure` when that check found something
 the author can fix, `pending` while it waits on a human sign-off, and `success`
@@ -59,8 +73,8 @@ check is red or waiting straight from the PR's status list.
 - **Don't require them.** They're informational. `pr-policy` is the one required
   gate, and the set of checks grows with each CLI release; a required per-check
   status would need a ruleset edit every time.
-- **Without `statuses: write`** the Action logs one warning and carries on; the
-  check-run still carries the verdict. Set `statuses: false` to opt out.
+- **Set `statuses: false`** to stop posting them. That leaves the `pr-policy`
+  status alone.
 
 ### Repos without UAT: `skip-uat`
 
@@ -107,6 +121,9 @@ That is safe here only because nothing checks out or runs the PR's code.
 Add a required status check named exactly **`pr-policy`** to the default-branch
 ruleset. That name is a frozen contract
 ([rmartz/pr-policy check-run contract](https://github.com/rmartz/pr-policy/blob/main/docs/check-run-contract.md)).
+The check-run and the commit status both satisfy it, and both come from the
+GitHub Actions app, so a rule that pins the source to GitHub Actions still
+matches.
 
 ## 3. Seed the labels
 

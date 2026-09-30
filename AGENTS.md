@@ -32,9 +32,11 @@ and `docs-links` checks. See [docs/okf-format.md](docs/okf-format.md).
 
 ## Contracts
 
-- The CLI posts the check-run named **`pr-policy`**. Consumers require it by
-  literal name, so no job or step here may post a status with that name. The
-  dogfood job is named `pr-policy (evaluate)` for that reason. The per-check
+- The library's `postVerdict` posts the verdict named **`pr-policy`**, as a
+  check-run and a commit status with the same state (the status is the fix for
+  superseded check suites, rmartz/pr-policy#24). Consumers require it by
+  literal name, so nothing else here may post a check or status with that name.
+  The dogfood job is named `pr-policy (evaluate)` for that reason. The per-check
   statuses the runner posts are `<status-context> / <check>`, never the bare
   name.
 - `action.yml` input metadata must not contain `${{ }}` expressions in
