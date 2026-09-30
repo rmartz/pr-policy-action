@@ -2,7 +2,7 @@
 // policy check, so the PR's status list shows which check failed, which one is
 // waiting on a human, and which passed, without opening the check-run.
 //
-// It does what `ai-pr-policy evaluate --pr <n> --repo <owner/repo>` does (gather
+// It does what `pr-policy evaluate --pr <n> --repo <owner/repo>` does (gather
 // facts, apply label edits, post the `pr-policy` verdict) through the package's
 // library API, because it needs each finding's `check` to group them.
 //

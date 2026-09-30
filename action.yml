@@ -86,7 +86,7 @@ runs:
       run: npm ci
     # The runner script lives in this action's directory, so its import of
     # @rmartz/pr-policy resolves to the copy just installed there. It does what
-    # `ai-pr-policy evaluate` does (including the pr-policy commit status), then
+    # `pr-policy evaluate` does (including the pr-policy commit status), then
     # posts one commit status per check.
     - name: Evaluate PR policy
       shell: bash

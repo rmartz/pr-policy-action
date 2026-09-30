@@ -9,7 +9,7 @@ tags: [pr-policy, action, overview]
 
 A composite GitHub Action. It installs the `@rmartz/pr-policy` CLI version pinned
 in this repo's lockfile, then evaluates one PR through its library API (what
-`ai-pr-policy evaluate` does). It:
+`pr-policy evaluate` does). It:
 
 1. reads the PR's title, labels, changed files, and both sides of every changed
    `.github/workflows/**` file through the API;

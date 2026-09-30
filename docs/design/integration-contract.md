@@ -15,7 +15,7 @@ The Action owns no policy logic. It relies on exactly this from the CLI:
 - **Library API, not the CLI.** The runner,
   [`scripts/evaluate.mjs`](../../scripts/evaluate.mjs), runs from the action's
   directory, so its `@rmartz/pr-policy` import resolves to that install. It does
-  what `ai-pr-policy evaluate --pr <n> --repo <owner/repo> [--skip-uat]` does,
+  what `pr-policy evaluate --pr <n> --repo <owner/repo> [--skip-uat]` does,
   in the same order: `selectChecks`, `gatherFacts`, `evaluatePolicy`,
   `applyLabelEdits`, `postVerdict`. `postVerdict` posts the `pr-policy`
   check-run and then a `pr-policy` commit status with the same state, so the
