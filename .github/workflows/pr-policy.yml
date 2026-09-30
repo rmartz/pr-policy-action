@@ -13,7 +13,7 @@ permissions:
   checks: write # post the pr-policy check-run
   pull-requests: write # write the labels pr-policy owns (CI approval needed)
   contents: read # read changed files at the merge base and head
-  statuses: write # post one commit status per policy check (pr-policy / <check>)
+  statuses: write # post the pr-policy commit status and one per policy check (pr-policy / <check>)
 
 concurrency:
   # Latest-wins per PR: a label action fires a burst of events, and the newest
