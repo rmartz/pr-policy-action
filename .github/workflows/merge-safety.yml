@@ -37,6 +37,9 @@ permissions:
 
 jobs:
   merge-safety:
+    # Not named `merge-safety`: the CLI owns that check-run and PATCHes any
+    # in-progress run of that exact name on the head, so the job must not publish it.
+    name: merge-safety (evaluate)
     # Skip, without a runner, the events the action would no-op on: another app's
     # check suite, a non-default branch's suite, a tag push, a branch deletion.
     if: >-
