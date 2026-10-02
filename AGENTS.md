@@ -51,8 +51,10 @@ This repo follows the shared
 and self-manages its config: fix gaps here, in a PR.
 
 - **Hygiene** via `rmartz/repo-hygiene-action`, every check at `severity: error`.
-- **CI:** Format ([ci.yml](.github/workflows/ci.yml)), PR-title lint, and the
-  post-merge [commit-convention](.github/workflows/commit-convention.yml) tripwire.
+- **CI:** Format ([ci.yml](.github/workflows/ci.yml)) and the post-merge
+  [commit-convention](.github/workflows/commit-convention.yml) tripwire. PR
+  titles are checked by pr-policy's `title` check, part of the required
+  `pr-policy` check.
 - **Releases** run through the fleet's shared
   [semantic-release-ci](https://github.com/rmartz/semantic-release-ci) workflows:
   [release.yml](.github/workflows/release.yml) releases on push to `main`, and
