@@ -8,6 +8,14 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      # First-party `rmartz/*` actions and reusable workflows are exempt from the
+      # default release cooldown (see the npm entry below); third-party actions
+      # keep it.
+      # Explicit, so declaring the block can't change the third-party default.
+      default-days: 3
+      exclude:
+        - 'rmartz/*'
     commit-message:
       # Action bumps only touch this repo's own CI workflows and the setup-node step,
       # never the policy the Action enforces: `chore` → no release.
@@ -52,9 +60,12 @@ updates:
           - patch
     cooldown:
       # Since 2026-07-14 Dependabot waits 3 days after a release before proposing
-      # it. @rmartz/pr-policy is first-party, published from rmartz/pr-policy via
-      # npm trusted publishing (OIDC), so the wait buys no supply-chain safety and
-      # just defeats the daily schedule above. Exempting it lets a new CLI version
-      # arrive on the next daily run. Every other dependency keeps the default.
+      # it. First-party `@rmartz/*` packages (the @rmartz/pr-policy CLI among them)
+      # are published from our own repos with provenance, so the wait buys no
+      # supply-chain safety and just defeats the daily schedule above. Exempting
+      # them lets a new CLI version arrive on the next daily run. Every third-party
+      # dependency keeps the default.
+      # Explicit, so declaring the block can't change the third-party default.
+      default-days: 3
       exclude:
-        - '@rmartz/pr-policy'
+        - '@rmartz/*'
