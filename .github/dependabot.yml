@@ -22,10 +22,14 @@ updates:
       prefix: chore
       include: scope
     groups:
-      # Catch-all, majors included (repository checklist default).
+      # Catch-all for patch and minor only; each major opens its own PR
+      # (repository checklist default).
       github-actions:
         patterns:
           - '*'
+        update-types:
+          - minor
+          - patch
 
   - package-ecosystem: npm
     directory: /
@@ -46,13 +50,19 @@ updates:
       prettier:
         patterns:
           - 'prettier'
+      # Catch-all for patch and minor only; each major opens its own PR
+      # (repository checklist default).
       dev-dependencies:
         dependency-type: development
         exclude-patterns:
           - 'prettier'
-      # A recorded case-by-case deviation from the catch-all default: the CLI is the
-      # only production dep, and its major must fall out to its own PR so a human
-      # reviews the breaking Action release (bot-automerge never merges a major).
+        update-types:
+          - minor
+          - patch
+      # Catch-all for patch and minor only (repository checklist default): the CLI
+      # is the only production dep, and its major falls out to its own PR so a
+      # human reviews the breaking Action release (bot-automerge never merges a
+      # major).
       production-dependencies:
         dependency-type: production
         update-types:
