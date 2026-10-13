@@ -28,6 +28,13 @@ The Action owns no policy logic. It relies on exactly this from the CLI:
   checks to run, each with a `name`),
   and the `Finding` shape (`check`, `message`, `effect` of `block` / `hold` /
   `info`, `headline`). A CLI release that changes any of them breaks the runner.
+- **The Dependabot retitle.** With `retitle-dependabot-ci`, the runner
+  ([`scripts/retitle.mjs`](../../scripts/retitle.mjs)) retitles a qualifying
+  Dependabot PR between `gatherFacts` and `evaluatePolicy` and evaluates the new
+  title. It relies on `sensitiveBumps`, `parseTitle`, `FUNCTIONAL_TYPES`,
+  `DEPENDABOT_LOGIN`, and `facts.author` / `facts.manifestChanges`, so it uses
+  the title check's own detection rather than a copy. A failed retitle warns and
+  evaluates the original title.
 - **Per-check statuses.** For each check `selectChecks` returned, the runner
   posts the commit
   status `<status-context> / <check>` on the PR head: `failure` on a `block`
