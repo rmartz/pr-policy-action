@@ -103,6 +103,39 @@ label. The default, `false`, keeps the gate.
   `true`, not through an expression or a variable, so both the gate and the
   agents read the same setting.
 
+### Dependabot linter bumps: `retitle-dependabot-ci`
+
+pr-policy's title check blocks a version change to a CI-sensitive linter or
+formatter (`eslint`, `prettier`, `black`, `ruff`, `pylint`) unless the title is
+typed `ci` or a release type, because every in-flight PR must re-test against
+the new tool. Dependabot titles those bumps `chore(deps-dev): …` or
+`build(deps): …`, and its `commit-message.prefix` is per ecosystem, not per
+group, so config can't fix it. Opt in to have the Action retitle them:
+
+```yaml
+- uses: rmartz/pr-policy-action@<sha> # vX.Y.Z
+  with:
+    pr: ${{ github.event.pull_request.number }}
+    retitle-dependabot-ci: true
+```
+
+When the PR's author is `dependabot[bot]` and it bumps one of those tools, the
+Action rewrites the type to `ci` and keeps the scope and subject
+(`chore(deps-dev): bump prettier …` → `ci(deps-dev): bump prettier …`), then
+evaluates the new title.
+
+- **Never a release type.** A `feat`/`fix`/`perf`/`revert` title is left alone:
+  demoting it would cancel a release. So is a title already typed `ci`, a PR
+  with no sensitive bump, and any PR not opened by Dependabot.
+- **Same detection as the check.** It calls the title check's own
+  `sensitiveBumps`, so the retitle and the block always agree.
+- **Runs on every event.** Dependabot may rewrite the title when it updates a
+  grouped PR in place, so `synchronize` retitles again. The edit is idempotent.
+- **Needs `pull-requests: write`**, which the caller already grants. If the edit
+  fails, the Action warns and evaluates the title the PR still has.
+
+The default, `false`, never touches a title.
+
 ### Why these event types
 
 - `synchronize` keeps the verdict on the current head.

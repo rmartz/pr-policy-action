@@ -23,7 +23,8 @@
   },
   "scripts": {
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test": "node --test scripts/*.test.mjs"
   },
   "dependencies": {
     "@rmartz/pr-policy": "1.1.0"

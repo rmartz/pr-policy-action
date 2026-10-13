@@ -30,17 +30,21 @@ in this repo's lockfile, then evaluates one PR through its library API (what
 
 It never checks out or executes the PR's code, and never applies
 `CI change approved`: that is the human sign-off the CI gate exists to require.
+The one thing it may change on the PR is the title of a Dependabot
+linter/formatter bump, and only with `retitle-dependabot-ci`
+([consuming.md](consuming.md#dependabot-linter-bumps-retitle-dependabot-ci)).
 
 ## Inputs
 
-| Input            | Default               | Meaning                                                                          |
-| ---------------- | --------------------- | -------------------------------------------------------------------------------- |
-| `pr`             | _(required)_          | The PR number to evaluate (`github.event.pull_request.number`).                  |
-| `token`          | `${{ github.token }}` | Installs the CLI, reads the PR, posts the check-run and statuses, writes labels. |
-| `node-version`   | `'22'`                | Node.js version the CLI runs under.                                              |
-| `statuses`       | `'true'`              | Post one commit status per check. `'false'` turns it off.                        |
-| `status-context` | `'pr-policy'`         | Status name prefix: `<prefix> / <check>`.                                        |
-| `skip-uat`       | `'false'`             | `'true'` drops the UAT gate, for a repo with nothing to user-test.               |
+| Input                   | Default               | Meaning                                                                          |
+| ----------------------- | --------------------- | -------------------------------------------------------------------------------- |
+| `pr`                    | _(required)_          | The PR number to evaluate (`github.event.pull_request.number`).                  |
+| `token`                 | `${{ github.token }}` | Installs the CLI, reads the PR, posts the check-run and statuses, writes labels. |
+| `node-version`          | `'22'`                | Node.js version the CLI runs under.                                              |
+| `statuses`              | `'true'`              | Post one commit status per check. `'false'` turns it off.                        |
+| `status-context`        | `'pr-policy'`         | Status name prefix: `<prefix> / <check>`.                                        |
+| `skip-uat`              | `'false'`             | `'true'` drops the UAT gate, for a repo with nothing to user-test.               |
+| `retitle-dependabot-ci` | `'false'`             | `'true'` retitles a Dependabot linter/formatter bump to `ci` before evaluating.  |
 
 There is no `version` input. The CLI version is the one pinned in this Action's
 lockfile, so an Action ref is a reproducible policy.

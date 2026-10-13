@@ -51,7 +51,7 @@ This repo follows the shared
 and self-manages its config: fix gaps here, in a PR.
 
 - **Hygiene** via `rmartz/repo-hygiene-action`, every check at `severity: error`.
-- **CI:** Format ([ci.yml](.github/workflows/ci.yml)) and the post-merge
+- **CI:** Format and Test ([ci.yml](.github/workflows/ci.yml)) and the post-merge
   [commit-convention](.github/workflows/commit-convention.yml) tripwire. PR
   titles are checked by pr-policy's `title` check, part of the required
   `pr-policy` check.
@@ -75,10 +75,13 @@ and self-manages its config: fix gaps here, in a PR.
 npm ci                 # install deps (all from npmjs, no auth needed)
 npm run format:check   # prettier --check .
 npm run format         # prettier --write .
+npm test               # node --test over scripts/*.test.mjs
 ```
 
-There is no build or test suite; the logic and its tests live in
-`@rmartz/pr-policy`. The real test is the dogfood run on this repo's PRs.
+There is no build. The policy logic and its tests live in `@rmartz/pr-policy`;
+the tests here cover only the runner's own logic (the Dependabot retitle), with
+`node:test` and no extra dependencies. The real test of the runner end to end is
+the dogfood run on this repo's PRs.
 
 ## Releases
 
