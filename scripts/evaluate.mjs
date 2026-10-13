@@ -4,7 +4,9 @@
 //
 // It does what `pr-policy evaluate --pr <n> --repo <owner/repo>` does (gather
 // facts, apply label edits, post the `pr-policy` verdict) through the package's
-// library API, because it needs each finding's `check` to group them.
+// library API, because it needs each finding's `check` to group them. With
+// `retitle-dependabot-ci` it first retitles a Dependabot CI-sensitive tool bump
+// to `ci` (scripts/retitle.mjs), which the CLI never does.
 //
 // The verdict is the `pr-policy` check-run plus a `pr-policy` commit status with
 // the same state. The status is the gate fix, not an informational extra: a
@@ -23,6 +25,8 @@ import {
   postVerdict,
   selectChecks,
 } from '@rmartz/pr-policy';
+
+import { ciRetitle, setTitle } from './retitle.mjs';
 
 const env = process.env;
 
@@ -46,6 +50,33 @@ try {
 
   const target = { repo, pr };
   const { facts, headSha } = await gatherFacts(target);
+
+  // Opt-in, and set by the caller workflow like `skip-uat`. On success the
+  // checks judge the new title; on failure they judge the one the PR still has.
+  if (env.INPUT_RETITLE_DEPENDABOT_CI === 'true') {
+    const title = ciRetitle(facts);
+    if (title !== undefined) {
+      try {
+        await setTitle(
+          {
+            repo,
+            pr,
+            token: env.INPUT_TOKEN,
+            apiUrl: env.GITHUB_API_URL ?? 'https://api.github.com',
+          },
+          title,
+        );
+        console.log(`Retitled ${repo}#${pr}: ${facts.title} → ${title}`);
+        facts.title = title;
+      } catch (err) {
+        console.log(
+          `::warning title=pr-policy::Could not retitle the PR to "${title}" ` +
+            `(${err instanceof Error ? err.message : err}). Grant the job \`pull-requests: write\`.`,
+        );
+      }
+    }
+  }
+
   const evaluation = await evaluatePolicy(facts, checks);
   await applyLabelEdits(target, evaluation);
   await postVerdict(target, headSha, evaluation);
