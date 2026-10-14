@@ -19,10 +19,13 @@ tags: [design, releases, dependabot, versioning]
    becomes `feat(deps):`, major becomes `feat(deps)!:` plus the `breaking change`
    label.
 4. bot-automerge auto-merges patch and minor bumps once the required checks pass.
-   A major waits for a human. It enables auto-merge with the
-   `BOT_AUTOMERGE_TOKEN` real-actor PAT (an Actions **and** a Dependabot secret):
-   a merge enabled with `GITHUB_TOKEN` fires no `push` workflows, so step 5 would
-   never run.
+   A major waits for a human. It enables auto-merge with an installation token
+   for the `rmartz-merge-bot` GitHub App, minted from the App's Client ID and
+   private key (each an Actions **and** a Dependabot secret): a merge enabled
+   with `GITHUB_TOKEN` fires no `push` workflows, so step 5 would never run.
+   App-authored events still trigger `push` workflows, and the App has its own
+   rate-limit pool, separate from the user's
+   ([rmartz/scripts#22](https://github.com/rmartz/scripts/issues/22)).
 5. [`release.yml`](../../.github/workflows/release.yml) runs semantic-release
    through the fleet's shared
    [semantic-release-ci](https://github.com/rmartz/semantic-release-ci) workflow,
