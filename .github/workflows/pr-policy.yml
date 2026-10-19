@@ -31,5 +31,8 @@ jobs:
       - uses: ./
         with:
           pr: ${{ github.event.pull_request.number }}
+          # Retitle a Dependabot linter/formatter bump to ci(...), the type the
+          # pr-policy title check requires for it, instead of blocking on a hand edit.
+          retitle-dependabot-ci: true
           # This repo ships only an Action; there is nothing to user-test.
           skip-uat: true
