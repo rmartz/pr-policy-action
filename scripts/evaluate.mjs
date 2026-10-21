@@ -6,7 +6,10 @@
 // facts, apply label edits, post the `pr-policy` verdict) through the package's
 // library API, because it needs each finding's `check` to group them. With
 // `retitle-dependabot-ci` it first retitles a Dependabot CI-sensitive tool bump
-// to `ci` (scripts/retitle.mjs), which the CLI never does.
+// to `ci` (scripts/retitle.mjs), which the CLI never does. On a `status` run it
+// does what `pr-policy evaluate --sha <sha>` does instead: when pr-lifecycle
+// posts `pr-lifecycle/sign-off`, it evaluates every open PR at that head
+// (scripts/trigger.mjs).
 //
 // The verdict is the `pr-policy` check-run plus a `pr-policy` commit status with
 // the same state. The status is the gate fix, not an informational extra: a
@@ -15,18 +18,23 @@
 // (rmartz/pr-policy#24). So it is posted whatever the `statuses` input says.
 // The per-check statuses (`<context> / <check>`) are the informational ones.
 //
-// Inputs arrive as INPUT_* env vars set by action.yml; GH_TOKEN is read by the
-// library's `gh` calls. See docs/design/integration-contract.md.
+// Inputs arrive as INPUT_* env vars set by action.yml, the event as the runner's
+// GITHUB_EVENT_NAME / GITHUB_EVENT_PATH; GH_TOKEN is read by the library's `gh`
+// calls. See docs/design/integration-contract.md.
+
+import { readFile } from 'node:fs/promises';
 
 import {
   applyLabelEdits,
   evaluatePolicy,
   gatherFacts,
+  openPullRequestsAtHead,
   postVerdict,
   selectChecks,
 } from '@rmartz/pr-policy';
 
 import { ciRetitle, setTitle } from './retitle.mjs';
+import { resolveTrigger } from './trigger.mjs';
 
 const env = process.env;
 
@@ -37,10 +45,18 @@ const STATES = { block: 'failure', hold: 'pending' };
 
 try {
   const repo = env.GITHUB_REPOSITORY;
-  const pr = Number(env.INPUT_PR);
-  if (!repo || !Number.isInteger(pr) || pr <= 0) {
-    console.error(`pr-policy: need a repository and a PR number (got "${env.INPUT_PR}").`);
+  const trigger = resolveTrigger({
+    eventName: env.GITHUB_EVENT_NAME,
+    event: await readEvent(),
+    pr: env.INPUT_PR,
+  });
+  if (!repo || trigger.error) {
+    console.error(`pr-policy: ${trigger.error ?? 'need a repository'}.`);
     process.exit(2);
+  }
+  if (trigger.skip) {
+    console.log(`pr-policy: ${trigger.skip}.`);
+    process.exit(0);
   }
 
   // The caller workflow sets these, never the PR: a pull_request_target caller
@@ -48,7 +64,20 @@ try {
   // Only the literal 'true' opts out; anything else keeps the strictest policy.
   const checks = selectChecks({ skipUat: env.INPUT_SKIP_UAT === 'true' });
 
-  const target = { repo, pr };
+  // A status run evaluates every open PR at that head; usually one, maybe none.
+  const prs = trigger.sha ? await openPullRequestsAtHead({ repo }, trigger.sha) : [trigger.pr];
+  if (prs.length === 0) console.log(`${repo}@${trigger.sha}: no open PR at that head`);
+  for (const pr of prs) {
+    await evaluateOne({ repo, pr }, checks);
+  }
+} catch (error) {
+  // Same contract as the CLI: non-zero only when the evaluation could not run.
+  console.error(error instanceof Error ? error.message : error);
+  process.exit(2);
+}
+
+async function evaluateOne(target, checks) {
+  const { repo, pr } = target;
   const { facts, headSha } = await gatherFacts(target);
 
   // Opt-in, and set by the caller workflow like `skip-uat`. On success the
@@ -91,10 +120,12 @@ try {
   if (env.INPUT_STATUSES === 'true') {
     await postStatuses(repo, headSha, results);
   }
-} catch (error) {
-  // Same contract as the CLI: non-zero only when the evaluation could not run.
-  console.error(error instanceof Error ? error.message : error);
-  process.exit(2);
+}
+
+// The webhook payload the run was started by. Absent outside Actions.
+async function readEvent() {
+  if (!env.GITHUB_EVENT_PATH) return undefined;
+  return JSON.parse(await readFile(env.GITHUB_EVENT_PATH, 'utf8'));
 }
 
 // One check's status: red on any `block`, pending on any `hold`, else green.

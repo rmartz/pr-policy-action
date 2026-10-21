@@ -20,15 +20,23 @@ branding:
 # The CLI version is the one pinned in this action's package-lock.json (bumped by
 # Dependabot + released as a new action version), so a given action ref enforces a
 # reproducible policy. See docs/design/integration-contract.md.
+#
+# A caller may also run it on `status`: when pr-lifecycle posts its
+# `pr-lifecycle/sign-off` status, the runner re-evaluates every open PR at that
+# commit, so the verdict follows the new classification. It reads the event
+# itself (scripts/trigger.mjs) and skips every other status context.
 
 inputs:
   pr:
     description: >-
       PR number to evaluate. Pass the pull_request_target event's number from your
-      caller (github.event.pull_request.number) — see docs/consuming.md. This text
-      must not contain a template expression: an action manifest validates
-      expressions in input metadata against a context where github is unavailable.
-    required: true
+      caller (github.event.pull_request.number) — see docs/consuming.md. On a
+      status event it is ignored and may be empty: a pr-lifecycle/sign-off status
+      re-evaluates every open PR whose head is the status's commit, and any other
+      status is skipped. This text must not contain a template expression: an
+      action manifest validates expressions in input metadata against a context
+      where github is unavailable.
+    required: false
   token:
     description: >-
       Token used to read the PR, post the pr-policy check-run and commit status
@@ -97,7 +105,8 @@ runs:
     # The runner script lives in this action's directory, so its import of
     # @rmartz/pr-policy resolves to the copy just installed there. It does what
     # `pr-policy evaluate` does (including the pr-policy commit status), then
-    # posts one commit status per check.
+    # posts one commit status per check. GITHUB_EVENT_NAME and GITHUB_EVENT_PATH
+    # tell it whether this is a pull_request_target or a status run.
     - name: Evaluate PR policy
       shell: bash
       env:

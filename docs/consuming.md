@@ -1,7 +1,7 @@
 ---
 type: Guidance
 title: Using pr-policy-action in a consuming repo
-description: The caller workflow a consuming repo adds, the event types and permissions it needs, why it runs on pull_request_target, making pr-policy a required check, and keeping the pin current with Dependabot.
+description: The caller workflow a consuming repo adds, the event types and permissions it needs, re-running on pr-lifecycle's sign-off status, why it runs on pull_request_target, making pr-policy a required check, and keeping the pin current with Dependabot.
 tags: [pr-policy, action, consuming, setup]
 ---
 
@@ -16,6 +16,7 @@ name: pr-policy
 on:
   pull_request_target:
     types: [opened, synchronize, reopened, edited, labeled, unlabeled]
+  status: # re-run when pr-lifecycle posts its sign-off status
 
 permissions:
   checks: write # post the pr-policy check-run
@@ -24,12 +25,15 @@ permissions:
   statuses: write # post the pr-policy commit status (the gate fix) and one per policy check
 
 concurrency:
-  group: pr-policy-${{ github.event.pull_request.number }}
+  # A status event has no PR number; group it by its commit instead.
+  group: pr-policy-${{ github.event.pull_request.number || github.event.sha }}
   cancel-in-progress: true
 
 jobs:
   pr-policy:
     name: pr-policy (evaluate)
+    # Only pr-lifecycle's sign-off status re-runs the gate; skip every other one.
+    if: github.event_name != 'status' || github.event.context == 'pr-lifecycle/sign-off'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -136,11 +140,40 @@ evaluates the new title.
 
 The default, `false`, never touches a title.
 
+### Re-running on pr-lifecycle's sign-off status
+
+[pr-lifecycle](https://github.com/rmartz/pr-lifecycle) posts a
+`pr-lifecycle/sign-off` commit status on each PR head, saying whether that head
+needs no sign-off, a CI sign-off, or UAT. pr-policy's UAT and CI-change checks
+gate on it (from `@rmartz/pr-policy` 1.4.0), and fall back to their own
+classification while no such status is on the head. The status can land after
+pr-policy has already run for that push, so the `status` trigger re-runs it.
+
+- **A status names a commit, not a PR.** The Action reads the event, looks up
+  every open PR whose head is that commit, and evaluates each, as
+  `pr-policy evaluate --sha <sha>` does. The `pr` input is empty on this event
+  and ignored. A PR whose head has since moved isn't re-run: its new head gets
+  its own status.
+- **Filter on the context.** Every commit status in the repo fires `status`,
+  including the ones pr-policy posts. The job's `if:` keeps a runner from
+  starting for any context but `pr-lifecycle/sign-off`. The Action skips the
+  rest on its own too, so a caller without the `if:` is still correct, only
+  slower.
+- **pr-lifecycle must post with a real token.** A status posted with a
+  workflow's `GITHUB_TOKEN` starts no workflow. pr-lifecycle posts the sign-off
+  status with its real-actor token, which does.
+- **No new permission.** The run reads the PR and posts the same verdict and
+  statuses, so the permissions above cover it.
+- **It's safe for a merge gate.** A `status` workflow always runs from the
+  default branch, like `pull_request_target`, so a PR can't change the caller
+  or the Action it runs.
+
 ### Why these event types
 
 - `synchronize` keeps the verdict on the current head.
 - `edited` re-evaluates when the title changes.
 - `labeled` / `unlabeled` let a human's `CI change approved` clear the CI finding.
+- `status` re-evaluates when pr-lifecycle's sign-off classification arrives.
 
 ### Why `pull_request_target`
 

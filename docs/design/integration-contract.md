@@ -23,7 +23,14 @@ The Action owns no policy logic. It relies on exactly this from the CLI:
   (rmartz/pr-policy#24). It is posted whatever `statuses` says, and a failed
   status write only warns. The runner calls the library because it needs each finding's `check` to post one status
   per check, and the CLI has no machine-readable output to recover that from.
-- **What this relies on.** Those five functions, `selectChecks({ skipUat })`
+- **The `status` trigger.** On a `status` event the runner reads the payload
+  from `GITHUB_EVENT_PATH` ([`scripts/trigger.mjs`](../../scripts/trigger.mjs)).
+  For context `SIGN_OFF_STATUS_CONTEXT` (`pr-lifecycle/sign-off`) it calls
+  `openPullRequestsAtHead` with the status's SHA and evaluates each PR as
+  above, which is what `pr-policy evaluate --sha <sha>` does. Any other context
+  exits 0 without evaluating. On any other event it evaluates the `pr` input.
+- **What this relies on.** Those five functions, `openPullRequestsAtHead`,
+  `SIGN_OFF_STATUS_CONTEXT`, `selectChecks({ skipUat })`
   (the `skip-uat` input, `true` only on the literal `'true'`; it returns the
   checks to run, each with a `name`),
   and the `Finding` shape (`check`, `message`, `effect` of `block` / `hold` /
