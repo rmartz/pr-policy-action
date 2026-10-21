@@ -30,9 +30,11 @@ The Action owns no policy logic. It relies on exactly this from the CLI:
   above, which is what `pr-policy evaluate --sha <sha>` does. Any other context
   exits 0 without evaluating. On any other event it evaluates the `pr` input.
 - **What this relies on.** Those five functions, `openPullRequestsAtHead`,
-  `SIGN_OFF_STATUS_CONTEXT`, `selectChecks({ skipUat })`
-  (the `skip-uat` input, `true` only on the literal `'true'`; it returns the
-  checks to run, each with a `name`),
+  `SIGN_OFF_STATUS_CONTEXT`, `selectChecks({ skipUat, signOffStatusCreators })`
+  (the `skip-uat` input, `true` only on the literal `'true'`, and the
+  `sign-off-status-creators` input split on commas and newlines; it returns the
+  checks to run, each with a `name`, and throws on an invalid creator such as
+  `github-actions[bot]`, which fails the run),
   and the `Finding` shape (`check`, `message`, `effect` of `block` / `hold` /
   `info`, `headline`). A CLI release that changes any of them breaks the runner.
 - **The Dependabot retitle.** With `retitle-dependabot-ci`, the runner

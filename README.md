@@ -49,6 +49,20 @@ job's `if:` keeps a runner from starting for any other status; the Action skips
 them too. It needs no permission beyond the ones above. A `status` workflow always
 runs from the default branch, so a PR can't change what it does.
 
+pr-policy trusts that status only from a person who could merge, or from a GitHub
+App you name. If your pr-lifecycle runs with an App token, name its bot account,
+or every PR holds on "Waiting on pr-lifecycle":
+
+```yaml
+with:
+  pr: ${{ github.event.pull_request.number }}
+  sign-off-status-creators: rmartz-merge-bot[bot]
+```
+
+Logins match exactly, and `github-actions[bot]` is refused because any workflow
+can post as it. See
+[trusting pr-lifecycle's App](docs/consuming.md#trusting-pr-lifecycles-app-sign-off-status-creators).
+
 The full setup, and why this runs on `pull_request_target`, is in the
 [consumer guide](docs/consuming.md).
 

@@ -62,7 +62,12 @@ try {
   // The caller workflow sets these, never the PR: a pull_request_target caller
   // runs from the base branch, so a PR can't switch off a gate it would wait on.
   // Only the literal 'true' opts out; anything else keeps the strictest policy.
-  const checks = selectChecks({ skipUat: env.INPUT_SKIP_UAT === 'true' });
+  // The library validates the creators and throws on a bad one (such as
+  // github-actions[bot]), which fails the run loudly.
+  const checks = selectChecks({
+    skipUat: env.INPUT_SKIP_UAT === 'true',
+    signOffStatusCreators: splitList(env.INPUT_SIGN_OFF_STATUS_CREATORS),
+  });
 
   // A status run evaluates every open PR at that head; usually one, maybe none.
   const prs = trigger.sha ? await openPullRequestsAtHead({ repo }, trigger.sha) : [trigger.pr];
@@ -120,6 +125,11 @@ async function evaluateOne(target, checks) {
   if (env.INPUT_STATUSES === 'true') {
     await postStatuses(repo, headSha, results);
   }
+}
+
+// A comma- or newline-separated input as a list; blanks are dropped by the library.
+function splitList(value) {
+  return (value ?? '').split(/[,\n]/);
 }
 
 // The webhook payload the run was started by. Absent outside Actions.

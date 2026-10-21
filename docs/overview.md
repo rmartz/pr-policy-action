@@ -39,15 +39,16 @@ linter/formatter bump, and only with `retitle-dependabot-ci`
 
 ## Inputs
 
-| Input                   | Default               | Meaning                                                                          |
-| ----------------------- | --------------------- | -------------------------------------------------------------------------------- |
-| `pr`                    | _(none)_              | The PR number (`github.event.pull_request.number`). Ignored on `status`.         |
-| `token`                 | `${{ github.token }}` | Installs the CLI, reads the PR, posts the check-run and statuses, writes labels. |
-| `node-version`          | `'22'`                | Node.js version the CLI runs under.                                              |
-| `statuses`              | `'true'`              | Post one commit status per check. `'false'` turns it off.                        |
-| `status-context`        | `'pr-policy'`         | Status name prefix: `<prefix> / <check>`.                                        |
-| `skip-uat`              | `'false'`             | `'true'` drops the UAT gate, for a repo with nothing to user-test.               |
-| `retitle-dependabot-ci` | `'false'`             | `'true'` retitles a Dependabot linter/formatter bump to `ci` before evaluating.  |
+| Input                      | Default               | Meaning                                                                                  |
+| -------------------------- | --------------------- | ---------------------------------------------------------------------------------------- |
+| `pr`                       | _(none)_              | The PR number (`github.event.pull_request.number`). Ignored on `status`.                 |
+| `token`                    | `${{ github.token }}` | Installs the CLI, reads the PR, posts the check-run and statuses, writes labels.         |
+| `node-version`             | `'22'`                | Node.js version the CLI runs under.                                                      |
+| `statuses`                 | `'true'`              | Post one commit status per check. `'false'` turns it off.                                |
+| `status-context`           | `'pr-policy'`         | Status name prefix: `<prefix> / <check>`.                                                |
+| `skip-uat`                 | `'false'`             | `'true'` drops the UAT gate, for a repo with nothing to user-test.                       |
+| `sign-off-status-creators` | `''`                  | GitHub App logins trusted to post `pr-lifecycle/sign-off`, e.g. `rmartz-merge-bot[bot]`. |
+| `retitle-dependabot-ci`    | `'false'`             | `'true'` retitles a Dependabot linter/formatter bump to `ci` before evaluating.          |
 
 There is no `version` input. The CLI version is the one pinned in this Action's
 lockfile, so an Action ref is a reproducible policy.
