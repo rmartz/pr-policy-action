@@ -5,8 +5,11 @@ This repo is the **composite GitHub Action** that runs the
 repo. It pins the CLI in `package.json`, wraps it in [`action.yml`](action.yml),
 and re-releases itself via semantic-release whenever Dependabot bumps that pin.
 It dogfoods itself: [`pr-policy.yml`](.github/workflows/pr-policy.yml) runs the
-local Action (`uses: ./`) on this repo's own PRs. See [README.md](README.md) and
-the [documentation](docs/index.md).
+local Action (`uses: ./`) on this repo's own PRs, and
+[`pr-lifecycle.yml`](.github/workflows/pr-lifecycle.yml) runs
+`rmartz/pr-lifecycle-action` labels-only with `uat: 'off'` (matching
+`skip-uat`), so pr-lifecycle's sign-off status can re-run the gate here once it
+posts one. See [README.md](README.md) and the [documentation](docs/index.md).
 
 **Policy logic doesn't belong here.** A new check, a rule change, or a label
 change goes in `rmartz/pr-policy` and arrives as a CLI bump.
