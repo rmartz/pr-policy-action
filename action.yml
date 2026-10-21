@@ -77,6 +77,17 @@ inputs:
       it would otherwise wait on.
     required: false
     default: 'false'
+  sign-off-status-creators:
+    description: >-
+      GitHub App logins trusted to post the pr-lifecycle/sign-off status, as a
+      comma- or newline-separated list of exact logins such as
+      rmartz-merge-bot[bot]. Name the App whose token your pr-lifecycle runs
+      with. A person with write, maintain, or admin is always trusted, so leave
+      this empty when pr-lifecycle uses a personal token. github-actions[bot]
+      is refused, because any workflow can post as it. Human sign-off labels
+      are unaffected. Set this in the caller workflow on the default branch.
+    required: false
+    default: ''
   retitle-dependabot-ci:
     description: >-
       Retitle a Dependabot PR that bumps a CI-sensitive linter or formatter
@@ -116,5 +127,6 @@ runs:
         INPUT_STATUSES: ${{ inputs.statuses }}
         INPUT_STATUS_CONTEXT: ${{ inputs.status-context }}
         INPUT_SKIP_UAT: ${{ inputs.skip-uat }}
+        INPUT_SIGN_OFF_STATUS_CREATORS: ${{ inputs.sign-off-status-creators }}
         INPUT_RETITLE_DEPENDABOT_CI: ${{ inputs.retitle-dependabot-ci }}
       run: node "${GITHUB_ACTION_PATH}/scripts/evaluate.mjs"
