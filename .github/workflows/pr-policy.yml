@@ -8,6 +8,9 @@ name: pr-policy
 on:
   pull_request_target:
     types: [opened, synchronize, reopened, edited, labeled, unlabeled]
+  # Re-run when pr-lifecycle posts its pr-lifecycle/sign-off status. A status
+  # workflow runs from the default branch too, so the same safety holds.
+  status:
 
 permissions:
   checks: write # post the pr-policy check-run
@@ -17,13 +20,16 @@ permissions:
 
 concurrency:
   # Latest-wins per PR: a label action fires a burst of events, and the newest
-  # label state should be the one that posts.
-  group: pr-policy-${{ github.event.pull_request.number }}
+  # label state should be the one that posts. A status event has no PR number,
+  # so it groups by its commit.
+  group: pr-policy-${{ github.event.pull_request.number || github.event.sha }}
   cancel-in-progress: true
 
 jobs:
   pr-policy:
     name: pr-policy (evaluate)
+    # Only pr-lifecycle's sign-off status re-runs the gate; skip every other one.
+    if: github.event_name != 'status' || github.event.context == 'pr-lifecycle/sign-off'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
