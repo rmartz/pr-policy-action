@@ -79,7 +79,8 @@ npm test               # node --test over scripts/*.test.mjs
 ```
 
 There is no build. The policy logic and its tests live in `@rmartz/pr-policy`;
-the tests here cover only the runner's own logic (the Dependabot retitle), with
+the tests here cover only the runner's own logic (the Dependabot retitle and
+the event it evaluates), with
 `node:test` and no extra dependencies. The real test of the runner end to end is
 the dogfood run on this repo's PRs.
 

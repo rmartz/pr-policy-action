@@ -13,14 +13,20 @@ name: pr-policy
 on:
   pull_request_target:
     types: [opened, synchronize, reopened, edited, labeled, unlabeled]
+  status: # re-run when pr-lifecycle posts its sign-off status
 permissions:
   checks: write
   pull-requests: write
   contents: read
   statuses: write # the pr-policy commit status, plus one per policy check
+concurrency:
+  group: pr-policy-${{ github.event.pull_request.number || github.event.sha }}
+  cancel-in-progress: true
 jobs:
   pr-policy:
     name: pr-policy (evaluate)
+    # Only pr-lifecycle's sign-off status re-runs the gate; skip every other one.
+    if: github.event_name != 'status' || github.event.context == 'pr-lifecycle/sign-off'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -32,8 +38,18 @@ jobs:
 Then require the `pr-policy` status on your default branch. Each policy check
 also gets its own informational status (`pr-policy / title`,
 `pr-policy / ci-change`, …) that shows failed, pending, or passed, so a reader
-sees which check is holding the PR without opening the check-run. The full setup, and
-why this runs on `pull_request_target`, is in the
+sees which check is holding the PR without opening the check-run.
+
+The `status` trigger re-evaluates the PR when
+[pr-lifecycle](https://github.com/rmartz/pr-lifecycle) posts its
+`pr-lifecycle/sign-off` status, which says whether the head needs a UAT or CI
+sign-off. A status event names a commit, not a PR, so the Action evaluates every
+open PR whose head is that commit, and the `pr` input is empty and ignored. The
+job's `if:` keeps a runner from starting for any other status; the Action skips
+them too. It needs no permission beyond the ones above. A `status` workflow always
+runs from the default branch, so a PR can't change what it does.
+
+The full setup, and why this runs on `pull_request_target`, is in the
 [consumer guide](docs/consuming.md).
 
 The policy logic lives in `@rmartz/pr-policy`. This repo pins that CLI, wraps it

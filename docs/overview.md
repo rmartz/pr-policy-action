@@ -9,7 +9,10 @@ tags: [pr-policy, action, overview]
 
 A composite GitHub Action. It installs the `@rmartz/pr-policy` CLI version pinned
 in this repo's lockfile, then evaluates one PR through its library API (what
-`pr-policy evaluate` does). It:
+`pr-policy evaluate` does). On a `status` event for pr-lifecycle's
+`pr-lifecycle/sign-off` status it does this for every open PR whose head is
+that commit, and it skips any other status
+([consuming.md](consuming.md#re-running-on-pr-lifecycles-sign-off-status)). It:
 
 1. reads the PR's title, labels, changed files, and both sides of every changed
    `.github/workflows/**` file through the API;
@@ -38,7 +41,7 @@ linter/formatter bump, and only with `retitle-dependabot-ci`
 
 | Input                   | Default               | Meaning                                                                          |
 | ----------------------- | --------------------- | -------------------------------------------------------------------------------- |
-| `pr`                    | _(required)_          | The PR number to evaluate (`github.event.pull_request.number`).                  |
+| `pr`                    | _(none)_              | The PR number (`github.event.pull_request.number`). Ignored on `status`.         |
 | `token`                 | `${{ github.token }}` | Installs the CLI, reads the PR, posts the check-run and statuses, writes labels. |
 | `node-version`          | `'22'`                | Node.js version the CLI runs under.                                              |
 | `statuses`              | `'true'`              | Post one commit status per check. `'false'` turns it off.                        |
