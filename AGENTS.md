@@ -7,7 +7,7 @@ and re-releases itself via semantic-release whenever Dependabot bumps that pin.
 It dogfoods itself: [`pr-policy.yml`](.github/workflows/pr-policy.yml) runs the
 local Action (`uses: ./`) on this repo's own PRs, and
 [`pr-lifecycle.yml`](.github/workflows/pr-lifecycle.yml) runs
-`rmartz/pr-lifecycle-action` without arming, with `uat: 'off'` (matching `skip-uat`). It posts the `pr-lifecycle/sign-off` status with the merge-bot App token, which the `pr-policy` caller trusts and re-runs on. See [README.md](README.md) and the [documentation](docs/index.md).
+`rmartz/pr-lifecycle-action` without arming, with `uat: 'off'` (matching `skip-uat`). It posts the `pr-lifecycle/sign-off` status as the `rmartz-pr-lifecycle` App, which the `pr-policy` caller trusts and re-runs on. See [README.md](README.md) and the [documentation](docs/index.md).
 
 **Policy logic doesn't belong here.** A new check, a rule change, or a label
 change goes in `rmartz/pr-policy` and arrives as a CLI bump.
