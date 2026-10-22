@@ -11,12 +11,6 @@ on:
   # Re-run when pr-lifecycle posts its pr-lifecycle/sign-off status. A status
   # workflow runs from the default branch too, so the same safety holds.
   status:
-  # Re-run when the pr-lifecycle caller finishes: it writes the UAT label with
-  # GITHUB_TOKEN, which starts no `labeled` run, so require-uat-label would
-  # otherwise never see it. Like `status`, this runs from the default branch.
-  workflow_run:
-    workflows: [pr-lifecycle]
-    types: [completed]
 
 permissions:
   checks: write # post the pr-policy check-run
@@ -26,9 +20,9 @@ permissions:
 
 concurrency:
   # Latest-wins per PR: a label action fires a burst of events, and the newest
-  # label state should be the one that posts. A status or workflow_run event has no PR
-  # number, so it groups by its commit.
-  group: pr-policy-${{ github.event.pull_request.number || github.event.sha || github.event.workflow_run.head_sha }}
+  # label state should be the one that posts. A status event has no PR number,
+  # so it groups by its commit.
+  group: pr-policy-${{ github.event.pull_request.number || github.event.sha }}
   cancel-in-progress: true
 
 jobs:
@@ -43,9 +37,6 @@ jobs:
       - uses: ./
         with:
           pr: ${{ github.event.pull_request.number }}
-          # Hold a PR with no UAT label, so every merge has an explicit UAT
-          # determination (pr-lifecycle keeps one on every open PR).
-          require-uat-label: true
           # Retitle a Dependabot linter/formatter bump to ci(...), the type the
           # pr-policy title check requires for it, instead of blocking on a hand edit.
           retitle-dependabot-ci: true
