@@ -1,7 +1,7 @@
 ---
 type: Guidance
 title: Using pr-policy-action in a consuming repo
-description: The caller workflow a consuming repo adds, the event types and permissions it needs, re-running on pr-lifecycle's sign-off status and trusting the App that posts it, why it runs on pull_request_target, making pr-policy a required check, and keeping the pin current with Dependabot.
+description: The caller workflow a consuming repo adds, the event types and permissions it needs, re-running on pr-lifecycle's sign-off status and trusting the App that posts it, requiring a UAT label and the workflow_run trigger it needs, why it runs on pull_request_target, making pr-policy a required check, and keeping the pin current with Dependabot.
 tags: [pr-policy, action, consuming, setup]
 ---
 
@@ -17,6 +17,9 @@ on:
   pull_request_target:
     types: [opened, synchronize, reopened, edited, labeled, unlabeled]
   status: # re-run when pr-lifecycle posts its sign-off status
+  workflow_run: # re-run when pr-lifecycle has written its UAT label
+    workflows: [pr-lifecycle] # the `name:` of your pr-lifecycle caller workflow
+    types: [completed]
 
 permissions:
   checks: write # post the pr-policy check-run
@@ -25,8 +28,8 @@ permissions:
   statuses: write # post the pr-policy commit status (the gate fix) and one per policy check
 
 concurrency:
-  # A status event has no PR number; group it by its commit instead.
-  group: pr-policy-${{ github.event.pull_request.number || github.event.sha }}
+  # A status or workflow_run event has no PR number; group it by its commit.
+  group: pr-policy-${{ github.event.pull_request.number || github.event.sha || github.event.workflow_run.head_sha }}
   cancel-in-progress: true
 
 jobs:
@@ -207,12 +210,47 @@ with no setting. Override it only for a different App:
 Like `skip-uat`, set it in the caller workflow on the default branch, so a PR
 can't change who is trusted.
 
+### Requiring a UAT label: `require-uat-label`
+
+Set `require-uat-label: true` to hold any PR that carries no UAT label
+(`no UAT needed`, `UAT pending`, `UAT ready`, `UAT passed`, or a legacy name),
+so every merged PR has an explicit UAT determination. pr-lifecycle keeps one of
+them on every open PR; this catches a PR whose labeling never happened.
+
+```yaml
+- uses: rmartz/pr-policy-action@<sha> # vX.Y.Z
+  with:
+    pr: ${{ github.event.pull_request.number }}
+    require-uat-label: true
+```
+
+- **Off by default. Turn it on only after pr-lifecycle is on the default
+  branch.** Otherwise every PR holds, including the one that adds pr-lifecycle,
+  because this caller runs from the default branch.
+- **Add the `workflow_run` trigger** (in the caller above). pr-lifecycle writes
+  the label with `GITHUB_TOKEN`, which starts no `labeled` run, so on `opened`
+  pr-policy can run before the label exists and nothing re-runs it. A completed
+  pr-lifecycle run re-evaluates every open PR at its head, the same way a
+  `status` run does. Name your pr-lifecycle caller's workflow in `workflows:`.
+- **Presence only, from any actor.** A label pr-lifecycle's bot applied counts.
+  It never relaxes the UAT gate: a PR that needs UAT and has only `UAT pending`
+  or `UAT ready` still waits on it.
+- **It runs even with `skip-uat`**, since pr-lifecycle records `no UAT needed`
+  in such a repo.
+- **A missing label is pending, not red.** It clears once pr-lifecycle runs.
+
+A `workflow_run` workflow runs from the default branch, like
+`pull_request_target`, so a PR can't change what it does, and it needs no
+permission beyond the ones above.
+
 ### Why these event types
 
 - `synchronize` keeps the verdict on the current head.
 - `edited` re-evaluates when the title changes.
 - `labeled` / `unlabeled` let a human's `CI change approved` clear the CI finding.
 - `status` re-evaluates when pr-lifecycle's sign-off classification arrives.
+- `workflow_run` re-evaluates when pr-lifecycle finishes, so the UAT label it
+  wrote is seen.
 
 ### Why `pull_request_target`
 

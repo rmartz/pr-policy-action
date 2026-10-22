@@ -28,10 +28,15 @@ The Action owns no policy logic. It relies on exactly this from the CLI:
   For context `SIGN_OFF_STATUS_CONTEXT` (`pr-lifecycle/sign-off`) it calls
   `openPullRequestsAtHead` with the status's SHA and evaluates each PR as
   above, which is what `pr-policy evaluate --sha <sha>` does. Any other context
-  exits 0 without evaluating. On any other event it evaluates the `pr` input.
+  exits 0 without evaluating. A `workflow_run` event with action `completed`
+  (the caller filters to pr-lifecycle's workflow) does the same with
+  `workflow_run.head_sha`; any other action exits 0. On any other event it
+  evaluates the `pr` input.
 - **What this relies on.** Those five functions, `openPullRequestsAtHead`,
-  `SIGN_OFF_STATUS_CONTEXT`, `selectChecks({ skipUat, signOffStatusCreators })`
-  (the `skip-uat` input, `true` only on the literal `'true'`, and the
+  `SIGN_OFF_STATUS_CONTEXT`,
+  `selectChecks({ skipUat, signOffStatusCreators, requireUatLabel })`
+  (the `skip-uat` and `require-uat-label` inputs, each `true` only on the
+  literal `'true'`, and the
   `sign-off-status-creators` input split on commas and newlines; it returns the
   checks to run, each with a `name`, and throws on an invalid creator such as
   `github-actions[bot]`, which fails the run),

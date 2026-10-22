@@ -6,9 +6,9 @@
 // facts, apply label edits, post the `pr-policy` verdict) through the package's
 // library API, because it needs each finding's `check` to group them. With
 // `retitle-dependabot-ci` it first retitles a Dependabot CI-sensitive tool bump
-// to `ci` (scripts/retitle.mjs), which the CLI never does. On a `status` run it
-// does what `pr-policy evaluate --sha <sha>` does instead: when pr-lifecycle
-// posts `pr-lifecycle/sign-off`, it evaluates every open PR at that head
+// to `ci` (scripts/retitle.mjs), which the CLI never does. On a `status` or a
+// `workflow_run` run it does what `pr-policy evaluate --sha <sha>` does instead: when pr-lifecycle
+// posts `pr-lifecycle/sign-off` or its workflow completes, it evaluates every open PR at that head
 // (scripts/trigger.mjs).
 //
 // The verdict is the `pr-policy` check-run plus a `pr-policy` commit status with
@@ -61,12 +61,13 @@ try {
 
   // The caller workflow sets these, never the PR: a pull_request_target caller
   // runs from the base branch, so a PR can't switch off a gate it would wait on.
-  // Only the literal 'true' opts out; anything else keeps the strictest policy.
+  // Only the literal 'true' turns an option on; anything else keeps the default.
   // The library validates the creators and throws on a bad one (such as
   // github-actions[bot]), which fails the run loudly.
   const checks = selectChecks({
     skipUat: env.INPUT_SKIP_UAT === 'true',
     signOffStatusCreators: splitList(env.INPUT_SIGN_OFF_STATUS_CREATORS),
+    requireUatLabel: env.INPUT_REQUIRE_UAT_LABEL === 'true',
   });
 
   // A status run evaluates every open PR at that head; usually one, maybe none.

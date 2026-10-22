@@ -14,13 +14,16 @@ on:
   pull_request_target:
     types: [opened, synchronize, reopened, edited, labeled, unlabeled]
   status: # re-run when pr-lifecycle posts its sign-off status
+  workflow_run: # re-run when pr-lifecycle has written its UAT label
+    workflows: [pr-lifecycle] # the `name:` of your pr-lifecycle caller workflow
+    types: [completed]
 permissions:
   checks: write
   pull-requests: write
   contents: read
   statuses: write # the pr-policy commit status, plus one per policy check
 concurrency:
-  group: pr-policy-${{ github.event.pull_request.number || github.event.sha }}
+  group: pr-policy-${{ github.event.pull_request.number || github.event.sha || github.event.workflow_run.head_sha }}
   cancel-in-progress: true
 jobs:
   pr-policy:
@@ -66,6 +69,15 @@ itself and names the creator in a finding, so a mismatch never locks the repo.
 Logins match exactly, and `github-actions[bot]` is refused because any workflow
 can post as it. See
 [trusting pr-lifecycle's App](docs/consuming.md#trusting-pr-lifecycles-app-sign-off-status-creators).
+
+To require every PR to carry a UAT label (`no UAT needed`, `UAT pending`,
+`UAT ready`, or `UAT passed`), set `require-uat-label: true`. It's off by
+default: turn it on only once your pr-lifecycle caller, which applies the
+labels, is on the default branch, or every PR holds. Presence counts from any
+actor and never relaxes the UAT gate. It needs the `workflow_run` trigger above:
+pr-lifecycle writes the label with `GITHUB_TOKEN`, which starts no `labeled`
+run, so its workflow's completion is what re-runs the gate. See
+[requiring a UAT label](docs/consuming.md#requiring-a-uat-label-require-uat-label).
 
 The full setup, and why this runs on `pull_request_target`, is in the
 [consumer guide](docs/consuming.md).
