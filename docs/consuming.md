@@ -162,10 +162,11 @@ pr-policy has already run for that push, so the `status` trigger re-runs it.
 - **pr-lifecycle must post with a real token.** A status posted with a
   workflow's `GITHUB_TOKEN` starts no workflow. pr-lifecycle posts the sign-off
   status with its real-actor token, which does.
-- **Name the App pr-lifecycle posts as.** pr-policy trusts the status only from
-  a person with write, maintain, or admin, or from a GitHub App the caller names
-  in `sign-off-status-creators` (see below). If your pr-lifecycle runs with an
-  App token, name that App, or every PR holds on "Waiting on pr-lifecycle".
+- **The App pr-lifecycle posts as must be trusted.** pr-policy trusts the status
+  only from a person with write, maintain, or admin, or from a GitHub App named
+  in `sign-off-status-creators`, which defaults to the fleet's
+  `rmartz-pr-lifecycle[bot]` (see below). A status from anyone else is ignored,
+  and pr-policy classifies the PR itself.
 - **No new permission.** The run reads the PR and posts the same verdict and
   statuses, so the permissions above cover it.
 - **It's safe for a merge gate.** A `status` workflow always runs from the
@@ -175,15 +176,22 @@ pr-policy has already run for that push, so the `status` trigger re-runs it.
 ### Trusting pr-lifecycle's App: `sign-off-status-creators`
 
 When pr-lifecycle runs with a GitHub App token, its sign-off status is posted by
-that App's bot account. Name it so pr-policy trusts the status:
+that App's bot account. The input defaults to the fleet's pr-lifecycle App,
+**`rmartz-pr-lifecycle[bot]`**, so the pr-lifecycle and pr-policy callers match
+with no setting. Override it only for a different App:
 
 ```yaml
 - uses: rmartz/pr-policy-action@<sha> # vX.Y.Z
   with:
     pr: ${{ github.event.pull_request.number }}
-    sign-off-status-creators: rmartz-merge-bot[bot]
+    sign-off-status-creators: rmartz-pr-lifecycle[bot], my-new-lifecycle-app[bot]
 ```
 
+- **A mismatch never locks the repo.** A status from a creator that isn't
+  trusted is ignored: pr-policy judges the PR as if pr-lifecycle hadn't posted,
+  and adds a finding naming the creator and this input. It can't loosen the
+  gate. Before pr-policy 1.5.1 it held every PR instead, including the PR that
+  fixes the list.
 - **Exact logins, comma- or newline-separated.** Matching is case-sensitive,
   with no globs, and only an account GitHub reports as a `Bot` matches.
 - **Never `github-actions[bot]`.** Any workflow in the repo can post as it with
@@ -193,9 +201,8 @@ that App's bot account. Name it so pr-policy trusts the status:
   from the merge bot to a dedicated pr-lifecycle App), then drop the old one.
 - **Only the status.** People's sign-off labels (`UAT passed`, `no UAT needed`,
   `CI change approved`) still need a person.
-- **Leave it empty** when pr-lifecycle posts with a personal token: a person who
-  could merge is always trusted. A status from an App you didn't name holds, and
-  its finding names the App.
+- **Set it to `''`** to trust only people, for example when pr-lifecycle posts
+  with a personal token: a person who could merge is always trusted.
 
 Like `skip-uat`, set it in the caller workflow on the default branch, so a PR
 can't change who is trusted.

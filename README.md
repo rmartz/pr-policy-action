@@ -50,15 +50,19 @@ them too. It needs no permission beyond the ones above. A `status` workflow alwa
 runs from the default branch, so a PR can't change what it does.
 
 pr-policy trusts that status only from a person who could merge, or from a GitHub
-App you name. If your pr-lifecycle runs with an App token, name its bot account,
-or every PR holds on "Waiting on pr-lifecycle":
+App named in `sign-off-status-creators`. It defaults to the fleet's pr-lifecycle
+App, `rmartz-pr-lifecycle[bot]`, so a caller needs no setting. Override it only
+when pr-lifecycle posts as a different App (list both during a switch), or set it
+to `''` to trust only people:
 
 ```yaml
 with:
   pr: ${{ github.event.pull_request.number }}
-  sign-off-status-creators: rmartz-merge-bot[bot]
+  sign-off-status-creators: rmartz-pr-lifecycle[bot], my-new-lifecycle-app[bot]
 ```
 
+A status from anyone else is ignored, not held on: pr-policy classifies the PR
+itself and names the creator in a finding, so a mismatch never locks the repo.
 Logins match exactly, and `github-actions[bot]` is refused because any workflow
 can post as it. See
 [trusting pr-lifecycle's App](docs/consuming.md#trusting-pr-lifecycles-app-sign-off-status-creators).
