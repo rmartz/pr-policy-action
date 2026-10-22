@@ -24,16 +24,19 @@ branding:
 # A caller may also run it on `status`: when pr-lifecycle posts its
 # `pr-lifecycle/sign-off` status, the runner re-evaluates every open PR at that
 # commit, so the verdict follows the new classification. It reads the event
-# itself (scripts/trigger.mjs) and skips every other status context.
+# itself (scripts/trigger.mjs) and skips every other status context. A caller
+# may likewise run it on `workflow_run` (completed) for pr-lifecycle's
+# workflow, so the UAT label pr-lifecycle writes re-runs the gate.
 
 inputs:
   pr:
     description: >-
       PR number to evaluate. Pass the pull_request_target event's number from your
       caller (github.event.pull_request.number) — see docs/consuming.md. On a
-      status event it is ignored and may be empty: a pr-lifecycle/sign-off status
-      re-evaluates every open PR whose head is the status's commit, and any other
-      status is skipped. This text must not contain a template expression: an
+      status or workflow_run event it is ignored and may be empty: a
+      pr-lifecycle/sign-off status, or a completed pr-lifecycle run,
+      re-evaluates every open PR whose head is that commit, and any other status
+      is skipped. This text must not contain a template expression: an
       action manifest validates expressions in input metadata against a context
       where github is unavailable.
     required: false
@@ -91,6 +94,18 @@ inputs:
       the default branch.
     required: false
     default: 'rmartz-pr-lifecycle[bot]'
+  require-uat-label:
+    description: >-
+      Hold any PR that carries no UAT label (no UAT needed, UAT pending, UAT
+      ready, or UAT passed), so every merged PR has an explicit UAT
+      determination. Presence counts from any actor and never relaxes the UAT
+      gate. It runs even with skip-uat. Off by default: turn it on only once the
+      repo's pr-lifecycle caller, which applies the labels, is on the default
+      branch, or every PR holds. Also add the workflow_run trigger on
+      pr-lifecycle's workflow (see docs/consuming.md), since its labels trigger
+      no labeled run.
+    required: false
+    default: 'false'
   retitle-dependabot-ci:
     description: >-
       Retitle a Dependabot PR that bumps a CI-sensitive linter or formatter
@@ -131,5 +146,6 @@ runs:
         INPUT_STATUS_CONTEXT: ${{ inputs.status-context }}
         INPUT_SKIP_UAT: ${{ inputs.skip-uat }}
         INPUT_SIGN_OFF_STATUS_CREATORS: ${{ inputs.sign-off-status-creators }}
+        INPUT_REQUIRE_UAT_LABEL: ${{ inputs.require-uat-label }}
         INPUT_RETITLE_DEPENDABOT_CI: ${{ inputs.retitle-dependabot-ci }}
       run: node "${GITHUB_ACTION_PATH}/scripts/evaluate.mjs"

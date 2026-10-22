@@ -48,6 +48,7 @@ linter/formatter bump, and only with `retitle-dependabot-ci`
 | `status-context`           | `'pr-policy'`                | Status name prefix: `<prefix> / <check>`.                                           |
 | `skip-uat`                 | `'false'`                    | `'true'` drops the UAT gate, for a repo with nothing to user-test.                  |
 | `sign-off-status-creators` | `'rmartz-pr-lifecycle[bot]'` | GitHub App logins trusted to post `pr-lifecycle/sign-off`. `''` trusts only people. |
+| `require-uat-label`        | `'false'`                    | `'true'` holds a PR that carries no UAT label. Needs the `workflow_run` trigger.    |
 | `retitle-dependabot-ci`    | `'false'`                    | `'true'` retitles a Dependabot linter/formatter bump to `ci` before evaluating.     |
 
 There is no `version` input. The CLI version is the one pinned in this Action's

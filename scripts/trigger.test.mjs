@@ -41,3 +41,29 @@ describe('a status run', () => {
     assert.ok(resolveTrigger({ eventName: 'status', event }).error);
   });
 });
+
+describe('a workflow_run run', () => {
+  it("evaluates the open PRs at a completed pr-lifecycle run's head", () => {
+    const event = { action: 'completed', workflow_run: { head_sha: SHA, name: 'pr-lifecycle' } };
+    assert.deepEqual(resolveTrigger({ eventName: 'workflow_run', event, pr: '' }), { sha: SHA });
+  });
+
+  it('ignores the pr input', () => {
+    const event = { action: 'completed', workflow_run: { head_sha: SHA } };
+    assert.deepEqual(resolveTrigger({ eventName: 'workflow_run', event, pr: '7' }), { sha: SHA });
+  });
+
+  for (const action of ['requested', 'in_progress', undefined]) {
+    it(`skips a ${JSON.stringify(action)} workflow_run`, () => {
+      const event = { action, workflow_run: { head_sha: SHA } };
+      const result = resolveTrigger({ eventName: 'workflow_run', event });
+      assert.ok(result.skip);
+      assert.equal(result.sha, undefined);
+    });
+  }
+
+  it('fails on a completed run with no head SHA', () => {
+    const event = { action: 'completed', workflow_run: {} };
+    assert.ok(resolveTrigger({ eventName: 'workflow_run', event }).error);
+  });
+});
