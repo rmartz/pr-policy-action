@@ -80,14 +80,17 @@ inputs:
   sign-off-status-creators:
     description: >-
       GitHub App logins trusted to post the pr-lifecycle/sign-off status, as a
-      comma- or newline-separated list of exact logins such as
-      rmartz-merge-bot[bot]. Name the App whose token your pr-lifecycle runs
-      with. A person with write, maintain, or admin is always trusted, so leave
-      this empty when pr-lifecycle uses a personal token. github-actions[bot]
-      is refused, because any workflow can post as it. Human sign-off labels
-      are unaffected. Set this in the caller workflow on the default branch.
+      comma- or newline-separated list of exact logins. Defaults to the fleet's
+      pr-lifecycle App, rmartz-pr-lifecycle[bot], so the two sides match with
+      no configuration. List more than one during a switch between Apps. Set it
+      to an empty string to trust only people (anyone with write, maintain, or
+      admin is always trusted). A status from anyone else is ignored and pr-policy
+      classifies the PR itself, so a mismatch never locks the repo.
+      github-actions[bot] is refused, because any workflow can post as it.
+      Human sign-off labels are unaffected. Set this in the caller workflow on
+      the default branch.
     required: false
-    default: ''
+    default: 'rmartz-pr-lifecycle[bot]'
   retitle-dependabot-ci:
     description: >-
       Retitle a Dependabot PR that bumps a CI-sensitive linter or formatter
