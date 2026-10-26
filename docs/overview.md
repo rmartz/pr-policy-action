@@ -46,7 +46,7 @@ linter/formatter bump, and only with `retitle-dependabot-ci`
 | `node-version`             | `'22'`                       | Node.js version the CLI runs under.                                                 |
 | `statuses`                 | `'true'`                     | Post one commit status per check. `'false'` turns it off.                           |
 | `status-context`           | `'pr-policy'`                | Status name prefix: `<prefix> / <check>`.                                           |
-| `skip-uat`                 | `'false'`                    | `'true'` drops the UAT gate, for a repo with nothing to user-test.                  |
+| `skip-uat`                 | `'false'`                    | `'true'` drops the UAT gate, for a repo that skips UAT by choice.                   |
 | `sign-off-status-creators` | `'rmartz-pr-lifecycle[bot]'` | GitHub App logins trusted to post `pr-lifecycle/sign-off`. `''` trusts only people. |
 | `require-uat-label`        | `'false'`                    | `'true'` holds a PR that carries no UAT label. Needs the `workflow_run` trigger.    |
 | `retitle-dependabot-ci`    | `'false'`                    | `'true'` retitles a Dependabot linter/formatter bump to `ci` before evaluating.     |
