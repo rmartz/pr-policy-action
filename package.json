@@ -27,7 +27,7 @@
     "test": "node --test scripts/*.test.mjs"
   },
   "dependencies": {
-    "@rmartz/pr-policy": "1.6.0"
+    "@rmartz/pr-policy": "1.7.1"
   },
   "devDependencies": {
     "prettier": "^3.9.10"
