@@ -86,8 +86,9 @@ check is red or waiting straight from the PR's status list.
 ### Repos without UAT: `skip-uat`
 
 The UAT gate holds a PR until it's user-tested or marked as not needing it. A
-repo with nothing to user-test, such as one that ships only a library or an
-Action, can turn the gate off in its caller:
+repo that chooses to skip UAT can turn the gate off in its caller. What the repo
+ships is still user-facing to its consumers, so this is a decision to skip UAT,
+not a claim that there is nothing to user-test:
 
 ```yaml
 - uses: rmartz/pr-policy-action@<sha> # vX.Y.Z
