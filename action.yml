@@ -52,9 +52,9 @@ inputs:
     required: false
     default: ${{ github.token }}
   node-version:
-    description: 'Node.js version to run the CLI under.'
+    description: 'Node.js version to run the CLI under. Defaults to 26, the current LTS; pass an older version to keep running on it.'
     required: false
-    default: '22'
+    default: '26'
   statuses:
     description: >-
       Post one commit status per policy check (e.g. "pr-policy / title") so the

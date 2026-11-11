@@ -43,7 +43,7 @@ linter/formatter bump, and only with `retitle-dependabot-ci`
 | -------------------------- | ---------------------------- | ----------------------------------------------------------------------------------- |
 | `pr`                       | _(none)_                     | The PR number (`github.event.pull_request.number`). Ignored on `status`.            |
 | `token`                    | `${{ github.token }}`        | Installs the CLI, reads the PR, posts the check-run and statuses, writes labels.    |
-| `node-version`             | `'22'`                       | Node.js version the CLI runs under.                                                 |
+| `node-version`             | `'26'`                       | Node.js version the CLI runs under (current LTS; pass an older one to keep it).     |
 | `statuses`                 | `'true'`                     | Post one commit status per check. `'false'` turns it off.                           |
 | `status-context`           | `'pr-policy'`                | Status name prefix: `<prefix> / <check>`.                                           |
 | `skip-uat`                 | `'false'`                    | `'true'` drops the UAT gate, for a repo that skips UAT by choice.                   |
