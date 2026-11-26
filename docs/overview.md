@@ -9,10 +9,9 @@ tags: [pr-policy, action, overview]
 
 A composite GitHub Action. It installs the `@rmartz/pr-policy` CLI version pinned
 in this repo's lockfile, then evaluates one PR through its library API (what
-`pr-policy evaluate` does). On a `status` event for pr-lifecycle's
-`pr-lifecycle/sign-off` status it does this for every open PR whose head is
-that commit, and it skips any other status
-([consuming.md](consuming.md#re-running-on-pr-lifecycles-sign-off-status)). It:
+`pr-policy evaluate` does). A run from a `status` or `workflow_run` trigger,
+which v1 callers used for pr-lifecycle, is skipped with a warning
+([consuming.md](consuming.md#upgrading-to-v2)). It:
 
 1. reads the PR's title, labels, changed files, and both sides of every changed
    `.github/workflows/**` file through the API;
@@ -39,17 +38,15 @@ linter/formatter bump, and only with `retitle-dependabot-ci`
 
 ## Inputs
 
-| Input                      | Default                      | Meaning                                                                             |
-| -------------------------- | ---------------------------- | ----------------------------------------------------------------------------------- |
-| `pr`                       | _(none)_                     | The PR number (`github.event.pull_request.number`). Ignored on `status`.            |
-| `token`                    | `${{ github.token }}`        | Installs the CLI, reads the PR, posts the check-run and statuses, writes labels.    |
-| `node-version`             | `'26'`                       | Node.js version the CLI runs under (current LTS; pass an older one to keep it).     |
-| `statuses`                 | `'true'`                     | Post one commit status per check. `'false'` turns it off.                           |
-| `status-context`           | `'pr-policy'`                | Status name prefix: `<prefix> / <check>`.                                           |
-| `skip-uat`                 | `'false'`                    | `'true'` drops the UAT gate, for a repo that skips UAT by choice.                   |
-| `sign-off-status-creators` | `'rmartz-pr-lifecycle[bot]'` | GitHub App logins trusted to post `pr-lifecycle/sign-off`. `''` trusts only people. |
-| `require-uat-label`        | `'false'`                    | `'true'` holds a PR that carries no UAT label. Needs the `workflow_run` trigger.    |
-| `retitle-dependabot-ci`    | `'false'`                    | `'true'` retitles a Dependabot linter/formatter bump to `ci` before evaluating.     |
+| Input                   | Default               | Meaning                                                                          |
+| ----------------------- | --------------------- | -------------------------------------------------------------------------------- |
+| `pr`                    | _(none)_              | The PR number (`github.event.pull_request.number`).                              |
+| `token`                 | `${{ github.token }}` | Installs the CLI, reads the PR, posts the check-run and statuses, writes labels. |
+| `node-version`          | `'26'`                | Node.js version the CLI runs under (current LTS, and the CLI's minimum).         |
+| `statuses`              | `'true'`              | Post one commit status per check. `'false'` turns it off.                        |
+| `status-context`        | `'pr-policy'`         | Status name prefix: `<prefix> / <check>`.                                        |
+| `skip-uat`              | `'false'`             | `'true'` drops the UAT gate, for a repo that skips UAT by choice.                |
+| `retitle-dependabot-ci` | `'false'`             | `'true'` retitles a Dependabot linter/formatter bump to `ci` before evaluating.  |
 
 There is no `version` input. The CLI version is the one pinned in this Action's
 lockfile, so an Action ref is a reproducible policy.

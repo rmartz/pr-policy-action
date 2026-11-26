@@ -23,23 +23,13 @@ The Action owns no policy logic. It relies on exactly this from the CLI:
   (rmartz/pr-policy#24). It is posted whatever `statuses` says, and a failed
   status write only warns. The runner calls the library because it needs each finding's `check` to post one status
   per check, and the CLI has no machine-readable output to recover that from.
-- **The `status` trigger.** On a `status` event the runner reads the payload
-  from `GITHUB_EVENT_PATH` ([`scripts/trigger.mjs`](../../scripts/trigger.mjs)).
-  For context `SIGN_OFF_STATUS_CONTEXT` (`pr-lifecycle/sign-off`) it calls
-  `openPullRequestsAtHead` with the status's SHA and evaluates each PR as
-  above, which is what `pr-policy evaluate --sha <sha>` does. Any other context
-  exits 0 without evaluating. A `workflow_run` event with action `completed`
-  (the caller filters to pr-lifecycle's workflow) does the same with
-  `workflow_run.head_sha`; any other action exits 0. On any other event it
-  evaluates the `pr` input.
-- **What this relies on.** Those five functions, `openPullRequestsAtHead`,
-  `SIGN_OFF_STATUS_CONTEXT`,
-  `selectChecks({ skipUat, signOffStatusCreators, requireUatLabel })`
-  (the `skip-uat` and `require-uat-label` inputs, each `true` only on the
-  literal `'true'`, and the
-  `sign-off-status-creators` input split on commas and newlines; it returns the
-  checks to run, each with a `name`, and throws on an invalid creator such as
-  `github-actions[bot]`, which fails the run),
+- **Retired triggers.** [`scripts/trigger.mjs`](../../scripts/trigger.mjs)
+  reads `GITHUB_EVENT_NAME`. A `status` or `workflow_run` run, the v1
+  pr-lifecycle triggers, exits 0 with a warning naming the trigger to remove.
+  Any other event evaluates the `pr` input.
+- **What this relies on.** Those five functions,
+  `selectChecks({ skipUat })` (the `skip-uat` input, `true` only on the
+  literal `'true'`; it returns the checks to run, each with a `name`),
   and the `Finding` shape (`check`, `message`, `effect` of `block` / `hold` /
   `info`, `headline`). A CLI release that changes any of them breaks the runner.
 - **The Dependabot retitle.** With `retitle-dependabot-ci`, the runner

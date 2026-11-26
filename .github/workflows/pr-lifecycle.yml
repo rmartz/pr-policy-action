@@ -9,8 +9,8 @@ run-name: pr-lifecycle (${{ github.event_name }}${{ github.event.action && forma
 #
 # No arming: arm-auto-merge is off, so this never arms, merges, disarms, or
 # updates a branch. Its App token only posts the
-# `pr-lifecycle/sign-off` status, which the pr-policy caller trusts from
-# rmartz-pr-lifecycle[bot]. bot-automerge.yml keeps arming eligible bot PRs.
+# `pr-lifecycle/sign-off` status, which pr-policy no longer reads (since this
+# Action's v2); the pr-lifecycle retirement removes this workflow. bot-automerge.yml keeps arming eligible bot PRs.
 # Turning arming on is a later, per-repo step; see
 # rmartz/pr-lifecycle-action docs/consuming.md.
 #
