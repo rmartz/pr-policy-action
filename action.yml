@@ -20,25 +20,16 @@ branding:
 # The CLI version is the one pinned in this action's package-lock.json (bumped by
 # Dependabot + released as a new action version), so a given action ref enforces a
 # reproducible policy. See docs/design/integration-contract.md.
-#
-# A caller may also run it on `status`: when pr-lifecycle posts its
-# `pr-lifecycle/sign-off` status, the runner re-evaluates every open PR at that
-# commit, so the verdict follows the new classification. It reads the event
-# itself (scripts/trigger.mjs) and skips every other status context. A caller
-# may likewise run it on `workflow_run` (completed) for pr-lifecycle's
-# workflow, so the UAT label pr-lifecycle writes re-runs the gate.
 
 inputs:
   pr:
     description: >-
       PR number to evaluate. Pass the pull_request_target event's number from your
-      caller (github.event.pull_request.number) — see docs/consuming.md. On a
-      status or workflow_run event it is ignored and may be empty: a
-      pr-lifecycle/sign-off status, or a completed pr-lifecycle run,
-      re-evaluates every open PR whose head is that commit, and any other status
-      is skipped. This text must not contain a template expression: an
-      action manifest validates expressions in input metadata against a context
-      where github is unavailable.
+      caller (github.event.pull_request.number) — see docs/consuming.md. A
+      status or workflow_run run, a trigger the Action no longer uses since
+      v2, is skipped with a warning. This text must not contain a template expression:
+      an action manifest validates expressions in input metadata against a
+      context where github is unavailable.
     required: false
   token:
     description: >-
@@ -52,7 +43,7 @@ inputs:
     required: false
     default: ${{ github.token }}
   node-version:
-    description: 'Node.js version to run the CLI under. Defaults to 26, the current LTS; pass an older version to keep running on it.'
+    description: 'Node.js version to run the CLI under. Defaults to 26, the current LTS and the oldest the pinned CLI supports.'
     required: false
     default: '26'
   statuses:
@@ -78,32 +69,6 @@ inputs:
       Set this in the caller workflow on the default branch; a
       pull_request_target caller runs from there, so a PR can't turn off a gate
       it would otherwise wait on.
-    required: false
-    default: 'false'
-  sign-off-status-creators:
-    description: >-
-      GitHub App logins trusted to post the pr-lifecycle/sign-off status, as a
-      comma- or newline-separated list of exact logins. Defaults to the fleet's
-      pr-lifecycle App, rmartz-pr-lifecycle[bot], so the two sides match with
-      no configuration. List more than one during a switch between Apps. Set it
-      to an empty string to trust only people (anyone with write, maintain, or
-      admin is always trusted). A status from anyone else is ignored and pr-policy
-      classifies the PR itself, so a mismatch never locks the repo.
-      github-actions[bot] is refused, because any workflow can post as it.
-      Human sign-off labels are unaffected. Set this in the caller workflow on
-      the default branch.
-    required: false
-    default: 'rmartz-pr-lifecycle[bot]'
-  require-uat-label:
-    description: >-
-      Hold any PR that carries no UAT label (no UAT needed, UAT pending, UAT
-      ready, or UAT passed), so every merged PR has an explicit UAT
-      determination. Presence counts from any actor and never relaxes the UAT
-      gate. It runs even with skip-uat. Off by default: turn it on only once the
-      repo's pr-lifecycle caller, which applies the labels, is on the default
-      branch, or every PR holds. Also add the workflow_run trigger on
-      pr-lifecycle's workflow (see docs/consuming.md), since its labels trigger
-      no labeled run.
     required: false
     default: 'false'
   retitle-dependabot-ci:
@@ -134,8 +99,8 @@ runs:
     # The runner script lives in this action's directory, so its import of
     # @rmartz/pr-policy resolves to the copy just installed there. It does what
     # `pr-policy evaluate` does (including the pr-policy commit status), then
-    # posts one commit status per check. GITHUB_EVENT_NAME and GITHUB_EVENT_PATH
-    # tell it whether this is a pull_request_target or a status run.
+    # posts one commit status per check. GITHUB_EVENT_NAME tells it to skip a
+    # leftover status or workflow_run trigger.
     - name: Evaluate PR policy
       shell: bash
       env:
@@ -145,7 +110,5 @@ runs:
         INPUT_STATUSES: ${{ inputs.statuses }}
         INPUT_STATUS_CONTEXT: ${{ inputs.status-context }}
         INPUT_SKIP_UAT: ${{ inputs.skip-uat }}
-        INPUT_SIGN_OFF_STATUS_CREATORS: ${{ inputs.sign-off-status-creators }}
-        INPUT_REQUIRE_UAT_LABEL: ${{ inputs.require-uat-label }}
         INPUT_RETITLE_DEPENDABOT_CI: ${{ inputs.retitle-dependabot-ci }}
       run: node "${GITHUB_ACTION_PATH}/scripts/evaluate.mjs"

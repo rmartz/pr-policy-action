@@ -1,7 +1,7 @@
 ---
 type: Guidance
 title: Using pr-policy-action in a consuming repo
-description: The caller workflow a consuming repo adds, the event types and permissions it needs, re-running on pr-lifecycle's sign-off status and trusting the App that posts it, requiring a UAT label and the workflow_run trigger it needs, why it runs on pull_request_target, making pr-policy a required check, and keeping the pin current with Dependabot.
+description: The caller workflow a consuming repo adds, the event types and permissions it needs, why it runs on pull_request_target, making pr-policy a required check, keeping the pin current with Dependabot, and what a caller removes when upgrading to v2.
 tags: [pr-policy, action, consuming, setup]
 ---
 
@@ -16,10 +16,6 @@ name: pr-policy
 on:
   pull_request_target:
     types: [opened, synchronize, reopened, edited, labeled, unlabeled]
-  status: # re-run when pr-lifecycle posts its sign-off status
-  workflow_run: # re-run when pr-lifecycle has written its UAT label
-    workflows: [pr-lifecycle] # the `name:` of your pr-lifecycle caller workflow
-    types: [completed]
 
 permissions:
   checks: write # post the pr-policy check-run
@@ -28,15 +24,13 @@ permissions:
   statuses: write # post the pr-policy commit status (the gate fix) and one per policy check
 
 concurrency:
-  # A status or workflow_run event has no PR number; group it by its commit.
-  group: pr-policy-${{ github.event.pull_request.number || github.event.sha || github.event.workflow_run.head_sha }}
+  # Latest-wins per PR: a label burst should post the newest label state.
+  group: pr-policy-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
   pr-policy:
     name: pr-policy (evaluate)
-    # Only pr-lifecycle's sign-off status re-runs the gate; skip every other one.
-    if: github.event_name != 'status' || github.event.context == 'pr-lifecycle/sign-off'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -85,7 +79,8 @@ check is red or waiting straight from the PR's status list.
 
 ### Repos without UAT: `skip-uat`
 
-The UAT gate holds a PR until it's user-tested or marked as not needing it. A
+The UAT gate holds a PR until it's user-tested (`UAT passed` on the current
+head) or marked as not needing it (`no UAT needed`). A
 repo that chooses to skip UAT can turn the gate off in its caller. What the repo
 ships is still user-facing to its consumers, so this is a decision to skip UAT,
 not a claim that there is nothing to user-test:
@@ -144,114 +139,12 @@ evaluates the new title.
 
 The default, `false`, never touches a title.
 
-### Re-running on pr-lifecycle's sign-off status
-
-[pr-lifecycle](https://github.com/rmartz/pr-lifecycle) posts a
-`pr-lifecycle/sign-off` commit status on each PR head, saying whether that head
-needs no sign-off, a CI sign-off, or UAT. pr-policy's UAT and CI-change checks
-gate on it (from `@rmartz/pr-policy` 1.4.0), and fall back to their own
-classification while no such status is on the head. The status can land after
-pr-policy has already run for that push, so the `status` trigger re-runs it.
-
-- **A status names a commit, not a PR.** The Action reads the event, looks up
-  every open PR whose head is that commit, and evaluates each, as
-  `pr-policy evaluate --sha <sha>` does. The `pr` input is empty on this event
-  and ignored. A PR whose head has since moved isn't re-run: its new head gets
-  its own status.
-- **Filter on the context.** Every commit status in the repo fires `status`,
-  including the ones pr-policy posts. The job's `if:` keeps a runner from
-  starting for any context but `pr-lifecycle/sign-off`. The Action skips the
-  rest on its own too, so a caller without the `if:` is still correct, only
-  slower.
-- **pr-lifecycle must post with a real token.** A status posted with a
-  workflow's `GITHUB_TOKEN` starts no workflow. pr-lifecycle posts the sign-off
-  status with its real-actor token, which does.
-- **The App pr-lifecycle posts as must be trusted.** pr-policy trusts the status
-  only from a person with write, maintain, or admin, or from a GitHub App named
-  in `sign-off-status-creators`, which defaults to the fleet's
-  `rmartz-pr-lifecycle[bot]` (see below). A status from anyone else is ignored,
-  and pr-policy classifies the PR itself.
-- **No new permission.** The run reads the PR and posts the same verdict and
-  statuses, so the permissions above cover it.
-- **It's safe for a merge gate.** A `status` workflow always runs from the
-  default branch, like `pull_request_target`, so a PR can't change the caller
-  or the Action it runs.
-
-### Trusting pr-lifecycle's App: `sign-off-status-creators`
-
-When pr-lifecycle runs with a GitHub App token, its sign-off status is posted by
-that App's bot account. The input defaults to the fleet's pr-lifecycle App,
-**`rmartz-pr-lifecycle[bot]`**, so the pr-lifecycle and pr-policy callers match
-with no setting. Override it only for a different App:
-
-```yaml
-- uses: rmartz/pr-policy-action@<sha> # vX.Y.Z
-  with:
-    pr: ${{ github.event.pull_request.number }}
-    sign-off-status-creators: rmartz-pr-lifecycle[bot], my-new-lifecycle-app[bot]
-```
-
-- **A mismatch never locks the repo.** A status from a creator that isn't
-  trusted is ignored: pr-policy judges the PR as if pr-lifecycle hadn't posted,
-  and adds a finding naming the creator and this input. It can't loosen the
-  gate. Before pr-policy 1.5.1 it held every PR instead, including the PR that
-  fixes the list.
-- **Exact logins, comma- or newline-separated.** Matching is case-sensitive,
-  with no globs, and only an account GitHub reports as a `Bot` matches.
-- **Never `github-actions[bot]`.** Any workflow in the repo can post as it with
-  its `GITHUB_TOKEN`, so the run fails if you name it. A dedicated App is safe
-  to trust because only a workflow holding its private key can mint its token.
-- **Switching Apps is a config change.** List both during a move (for example
-  from the merge bot to a dedicated pr-lifecycle App), then drop the old one.
-- **Only the status.** People's sign-off labels (`UAT passed`, `no UAT needed`,
-  `CI change approved`) still need a person.
-- **Set it to `''`** to trust only people, for example when pr-lifecycle posts
-  with a personal token: a person who could merge is always trusted.
-
-Like `skip-uat`, set it in the caller workflow on the default branch, so a PR
-can't change who is trusted.
-
-### Requiring a UAT label: `require-uat-label`
-
-Set `require-uat-label: true` to hold any PR that carries no UAT label
-(`no UAT needed`, `UAT pending`, `UAT ready`, `UAT passed`, or a legacy name),
-so every merged PR has an explicit UAT determination. pr-lifecycle keeps one of
-them on every open PR; this catches a PR whose labeling never happened.
-
-```yaml
-- uses: rmartz/pr-policy-action@<sha> # vX.Y.Z
-  with:
-    pr: ${{ github.event.pull_request.number }}
-    require-uat-label: true
-```
-
-- **Off by default. Turn it on only after pr-lifecycle is on the default
-  branch.** Otherwise every PR holds, including the one that adds pr-lifecycle,
-  because this caller runs from the default branch.
-- **Add the `workflow_run` trigger** (in the caller above). pr-lifecycle writes
-  the label with `GITHUB_TOKEN`, which starts no `labeled` run, so on `opened`
-  pr-policy can run before the label exists and nothing re-runs it. A completed
-  pr-lifecycle run re-evaluates every open PR at its head, the same way a
-  `status` run does. Name your pr-lifecycle caller's workflow in `workflows:`.
-- **Presence only, from any actor.** A label pr-lifecycle's bot applied counts.
-  It never relaxes the UAT gate: a PR that needs UAT and has only `UAT pending`
-  or `UAT ready` still waits on it.
-- **It runs even with `skip-uat`**, since pr-lifecycle records `no UAT needed`
-  in such a repo.
-- **A missing label is pending, not red.** It clears once pr-lifecycle runs.
-
-A `workflow_run` workflow runs from the default branch, like
-`pull_request_target`, so a PR can't change what it does, and it needs no
-permission beyond the ones above.
-
 ### Why these event types
 
 - `synchronize` keeps the verdict on the current head.
 - `edited` re-evaluates when the title changes.
-- `labeled` / `unlabeled` let a human's `CI change approved` clear the CI finding.
-- `status` re-evaluates when pr-lifecycle's sign-off classification arrives.
-- `workflow_run` re-evaluates when pr-lifecycle finishes, so the UAT label it
-  wrote is seen.
+- `labeled` / `unlabeled` let a human's sign-off label (`CI change approved`,
+  `UAT passed`, `no UAT needed`) clear its finding.
 
 ### Why `pull_request_target`
 
@@ -279,3 +172,30 @@ matches.
 Pin the Action by commit SHA with a `# vX.Y.Z` comment, and make sure
 `.github/dependabot.yml` has a `github-actions` entry. Dependabot bumps the pin,
 and a new CLI version reaches you as an ordinary PR.
+
+## Upgrading to v2
+
+v2 pins `@rmartz/pr-policy` 3, which dropped its dependency on pr-lifecycle (its
+`pr-lifecycle/sign-off` status and the `uat-label` check). In every caller
+workflow:
+
+1. **Remove the `sign-off-status-creators` input.** pr-policy no longer reads
+   the sign-off status, so there is nothing to trust.
+2. **Remove the `require-uat-label` input.** The check it turned on is gone.
+3. **Remove the `status` trigger and its job filter,**
+   `if: github.event_name != 'status' || github.event.context == 'pr-lifecycle/sign-off'`.
+4. **Remove the `workflow_run` trigger on pr-lifecycle's workflow**
+   (`workflows: [pr-lifecycle]`, `types: [completed]`).
+5. **Drop the `github.event.sha` and `github.event.workflow_run.head_sha`
+   fallbacks** from the `concurrency` group, leaving
+   `pr-policy-${{ github.event.pull_request.number }}`. They only served the two
+   removed triggers.
+6. **Drop a `node-version` below 26**, if the caller passes one. The CLI needs
+   Node.js 26.
+
+The result is the caller in [step 1](#1-add-the-caller-workflow).
+
+A caller that misses a step doesn't break the gate. GitHub warns about an
+unexpected input and ignores it. A leftover `status` or `workflow_run` run is
+skipped with a warning that names the trigger to remove, so it doesn't go red
+on every status posted to the repo.
