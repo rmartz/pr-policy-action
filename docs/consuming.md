@@ -199,3 +199,7 @@ A caller that misses a step doesn't break the gate. GitHub warns about an
 unexpected input and ignores it. A leftover `status` or `workflow_run` run is
 skipped with a warning that names the trigger to remove, so it doesn't go red
 on every status posted to the repo.
+
+pr-policy 3 also stopped reading two labels: `tested` no longer counts as
+`UAT passed`, and `escalation needed` has no effect. Apply `UAT passed` on the
+current head, or `no UAT needed`, instead.

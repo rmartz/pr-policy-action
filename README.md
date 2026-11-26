@@ -40,11 +40,8 @@ sees which check is holding the PR without opening the check-run.
 ## Upgrading to v2
 
 v2 pins `@rmartz/pr-policy` 3, which dropped its pr-lifecycle dependency, and
-needs Node.js 26. Callers must remove the `sign-off-status-creators` and
-`require-uat-label` inputs, the `status` trigger and its
-`pr-lifecycle/sign-off` job filter, and the `workflow_run` trigger on
-pr-lifecycle. The full checklist is in
-[upgrading to v2](docs/consuming.md#upgrading-to-v2).
+needs Node.js 26. Its inputs and triggers for pr-lifecycle are gone; what a
+caller removes is in [upgrading to v2](docs/consuming.md#upgrading-to-v2).
 
 The full setup, and why this runs on `pull_request_target`, is in the
 [consumer guide](docs/consuming.md).

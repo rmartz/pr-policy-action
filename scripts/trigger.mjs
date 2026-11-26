@@ -21,7 +21,7 @@ export function resolveTrigger({ eventName, pr }) {
       skip: `ignoring a ${eventName} run`,
       warning:
         `pr-policy no longer re-runs on ${eventName} events. ` +
-        `Remove the ${eventName} trigger from this caller workflow (see the Upgrading section of the pr-policy-action README).`,
+        `Remove the ${eventName} trigger from this caller workflow (see https://github.com/rmartz/pr-policy-action/blob/main/docs/consuming.md#upgrading-to-v2).`,
     };
   }
   const number = Number(pr);

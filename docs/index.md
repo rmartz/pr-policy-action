@@ -11,7 +11,8 @@ repo. Written in [Open Knowledge Format](okf-format.md).
 - [What pr-policy-action is](overview.md): what the Action does, its inputs,
   and what it posts.
 - [Using it in a consuming repo](consuming.md): the caller workflow, its
-  permissions, making `pr-policy` required, and keeping the pin current.
+  permissions, making `pr-policy` required, keeping the pin current, and what
+  to remove when upgrading to v2.
 - [The OKF documentation format](okf-format.md): how these pages are structured
   and validated.
 - [Design & distribution](design/index.md): how the Action wraps the CLI and how
