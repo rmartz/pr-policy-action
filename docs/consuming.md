@@ -176,7 +176,7 @@ and a new CLI version reaches you as an ordinary PR.
 ## Upgrading to v2
 
 v2 pins `@rmartz/pr-policy` 3, which dropped its dependency on the retired PR
-automation (its `pr-lifecycle/sign-off` status and the `uat-label` check). In
+automation (the `pr-lifecycle/sign-off` status and the `uat-label` check). In
 every caller workflow:
 
 1. **Remove the `sign-off-status-creators` input.** pr-policy no longer reads
