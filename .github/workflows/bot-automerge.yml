@@ -49,5 +49,5 @@ jobs:
           # never run and a merged CLI bump would never ship
           # (rmartz/bot-automerge-action#31). App-authored events do trigger push
           # workflows, and the App has its own rate-limit pool, separate from the
-          # user's (rmartz/scripts#22).
+          # user's.
           token: ${{ steps.app-token.outputs.token }}
