@@ -41,7 +41,7 @@ updates:
       # Production deps ship inside the released Action, so their bump must cut a
       # release: `fix` (→ patch). dependabot-release-type then rewrites the title to
       # mirror the CLI's semver bump (minor → feat(deps), major → feat(deps)! +
-      # breaking-change label). Dev deps never ship: `chore`. (rmartz/ai#82.)
+      # breaking-change label). Dev deps never ship: `chore`.
       prefix: fix
       prefix-development: chore
       include: scope

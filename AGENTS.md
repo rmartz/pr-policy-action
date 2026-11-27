@@ -46,9 +46,9 @@ and `docs-links` checks. See [docs/okf-format.md](docs/okf-format.md).
 
 ## Repository conformance
 
-This repo follows the shared
-[repository checklist](https://github.com/rmartz/ai/blob/main/docs/guidance/repository-checklist.md)
-and self-manages its config: fix gaps here, in a PR.
+This repo follows the shared repository checklist
+(`~/.claude/knowledge/guidance/repository-checklist.md` in the agent knowledge
+base) and self-manages its config: fix gaps here, in a PR.
 
 - **Hygiene** via `rmartz/repo-hygiene-action`, every check at `severity: error`.
 - **CI:** Format and Test ([ci.yml](.github/workflows/ci.yml)) and the post-merge
