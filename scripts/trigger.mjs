@@ -1,8 +1,8 @@
 // Decides what one run evaluates, from the event that started it: the `pr`
 // input, as passed by a pull_request_target caller.
 //
-// Before v2 a caller also ran the Action on `status` (pr-lifecycle's
-// `pr-lifecycle/sign-off`) and on `workflow_run` (pr-lifecycle's workflow).
+// Before v2 a caller also ran the Action on `status` (the sign-off
+// status the retired PR automation posted) and on `workflow_run` (its workflow).
 // @rmartz/pr-policy 3 dropped that dependency, so a run from either trigger has
 // nothing to do. It is skipped with a warning naming the trigger to remove,
 // rather than failed, so a caller that hasn't been updated yet doesn't go red on

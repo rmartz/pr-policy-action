@@ -25,8 +25,8 @@ The Action owns no policy logic. It relies on exactly this from the CLI:
   per check, and the CLI has no machine-readable output to recover that from.
 - **Retired triggers.** [`scripts/trigger.mjs`](../../scripts/trigger.mjs)
   reads `GITHUB_EVENT_NAME`. A `status` or `workflow_run` run, the v1
-  pr-lifecycle triggers, exits 0 with a warning naming the trigger to remove.
-  Any other event evaluates the `pr` input.
+  triggers for the retired PR automation, exits 0 with a warning naming the
+  trigger to remove. Any other event evaluates the `pr` input.
 - **What this relies on.** Those five functions,
   `selectChecks({ skipUat })` (the `skip-uat` input, `true` only on the
   literal `'true'`; it returns the checks to run, each with a `name`),

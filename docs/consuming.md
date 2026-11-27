@@ -175,16 +175,16 @@ and a new CLI version reaches you as an ordinary PR.
 
 ## Upgrading to v2
 
-v2 pins `@rmartz/pr-policy` 3, which dropped its dependency on pr-lifecycle (its
-`pr-lifecycle/sign-off` status and the `uat-label` check). In every caller
-workflow:
+v2 pins `@rmartz/pr-policy` 3, which dropped its dependency on the retired PR
+automation (the `pr-lifecycle/sign-off` status and the `uat-label` check). In
+every caller workflow:
 
 1. **Remove the `sign-off-status-creators` input.** pr-policy no longer reads
    the sign-off status, so there is nothing to trust.
 2. **Remove the `require-uat-label` input.** The check it turned on is gone.
 3. **Remove the `status` trigger and its job filter,**
    `if: github.event_name != 'status' || github.event.context == 'pr-lifecycle/sign-off'`.
-4. **Remove the `workflow_run` trigger on pr-lifecycle's workflow**
+4. **Remove the `workflow_run` trigger on that automation's workflow**
    (`workflows: [pr-lifecycle]`, `types: [completed]`).
 5. **Drop the `github.event.sha` and `github.event.workflow_run.head_sha`
    fallbacks** from the `concurrency` group, leaving

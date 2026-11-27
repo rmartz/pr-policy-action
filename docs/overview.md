@@ -10,7 +10,7 @@ tags: [pr-policy, action, overview]
 A composite GitHub Action. It installs the `@rmartz/pr-policy` CLI version pinned
 in this repo's lockfile, then evaluates one PR through its library API (what
 `pr-policy evaluate` does). A run from a `status` or `workflow_run` trigger,
-which v1 callers used for pr-lifecycle, is skipped with a warning
+which v1 callers used for the retired PR automation, is skipped with a warning
 ([consuming.md](consuming.md#upgrading-to-v2)). It:
 
 1. reads the PR's title, labels, changed files, and both sides of every changed

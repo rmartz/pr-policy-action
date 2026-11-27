@@ -39,9 +39,10 @@ sees which check is holding the PR without opening the check-run.
 
 ## Upgrading to v2
 
-v2 pins `@rmartz/pr-policy` 3, which dropped its pr-lifecycle dependency, and
-needs Node.js 26. Its inputs and triggers for pr-lifecycle are gone; what a
-caller removes is in [upgrading to v2](docs/consuming.md#upgrading-to-v2).
+v2 pins `@rmartz/pr-policy` 3, which dropped its dependency on the retired PR
+automation, and needs Node.js 26. Its inputs and triggers for that automation
+are gone; what a caller removes is in
+[upgrading to v2](docs/consuming.md#upgrading-to-v2).
 
 The full setup, and why this runs on `pull_request_target`, is in the
 [consumer guide](docs/consuming.md).
